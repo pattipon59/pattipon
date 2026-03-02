@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบส่งงาน PA โรงเรียนขัวเรียงศึกษา ปี 2569</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        .navbar-brand {
+            font-weight: 700;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 1.25rem 1.5rem;
+        }
+        .card-header h5 {
+            margin: 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #4a5568;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+            padding: 10px 24px;
+            font-weight: 500;
+            border-radius: 8px;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        .nav-link {
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .nav-link.active {
+            color: #3498db !important;
+            font-weight: 600;
+        }
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-in-out;
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-badge {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        /* Settings Button */
+        .btn-settings {
+            background-color: #6c757d;
+            color: white;
+            border-radius: 50px;
+            padding: 8px 16px;
+        }
+        .btn-settings:hover {
+            background-color: #5a6268;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand text-primary" href="#">
+                <i class="fas fa-school me-2"></i> ขัวเรียงศึกษา
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="nav-form" onclick="switchView('form')">
+                            <i class="fas fa-paper-plane me-1"></i> ส่งแบบข้อตกลง (PA)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-report" onclick="switchView('report')">
+                            <i class="fas fa-chart-bar me-1"></i> รายงานผลการส่ง
+                        </a>
+                    </li>
+                </ul>
+                <button class="btn btn-settings btn-sm" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="fas fa-cog me-1"></i> ตั้งค่าระบบ
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4 mb-5">
+        
+        <!-- View: Form -->
+        <div id="view-form" class="view-section active">
+            <div class="text-center mb-4">
+                <h3 class="fw-bold text-dark">ระบบส่งข้อตกลงในการพัฒนางาน (PA)</h3>
+                <p class="text-muted">สำหรับข้าราชการครูและบุคลากรทางการศึกษา โรงเรียนขัวเรียงศึกษา ประจำปีงบประมาณ 2569</p>
+            </div>
+
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="card shadow-sm">
+                        <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white" style="border-radius: 12px 12px 0 0 !important; background: linear-gradient(135deg, #3498db, #2980b9) !important;">
+                            <h5 class="text-white"><i class="fas fa-edit me-2"></i> แบบฟอร์มนำส่งข้อมูล</h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="paForm">
+                                <div class="row g-3">
+                                    <!-- คำนำหน้า -->
+                                    <div class="col-md-3">
+                                        <label for="prefix" class="form-label">คำนำหน้า <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="prefix" required>
+                                            <option value="" selected disabled>เลือก...</option>
+                                            <option value="นาย">นาย</option>
+                                            <option value="นาง">นาง</option>
+                                            <option value="นางสาว">นางสาว</option>
+                                            <option value="ว่าที่ ร.ต.">ว่าที่ ร.ต.</option>
+                                            <option value="ว่าที่ ร.ต. หญิง">ว่าที่ ร.ต. หญิง</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- ชื่อ -->
+                                    <div class="col-md-4">
+                                        <label for="firstName" class="form-label">ชื่อ <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="firstName" placeholder="กรอกชื่อ" required>
+                                    </div>
+
+                                    <!-- นามสกุล -->
+                                    <div class="col-md-5">
+                                        <label for="lastName" class="form-label">นามสกุล <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="lastName" placeholder="กรอกนามสกุล" required>
+                                    </div>
+
+                                    <!-- ตำแหน่ง/วิทยฐานะ -->
+                                    <div class="col-md-6">
+                                        <label for="position" class="form-label">ตำแหน่ง/วิทยฐานะ <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="position" required>
+                                            <option value="" selected disabled>เลือกตำแหน่ง...</option>
+                                            <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                                            <option value="พนักงานราชการ">พนักงานราชการ</option>
+                                            <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                                            <option value="ครู">ครู (ไม่มีวิทยฐานะ)</option>
+                                            <option value="ครูชำนาญการ">ครูชำนาญการ</option>
+                                            <option value="ครูชำนาญการพิเศษ">ครูชำนาญการพิเศษ</option>
+                                            <option value="ครูเชี่ยวชาญ">ครูเชี่ยวชาญ</option>
+                                            <option value="ครูเชี่ยวชาญพิเศษ">ครูเชี่ยวชาญพิเศษ</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- กลุ่มสาระการเรียนรู้ -->
+                                    <div class="col-md-6">
+                                        <label for="department" class="form-label">กลุ่มสาระการเรียนรู้ <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="department" required>
+                                            <option value="" selected disabled>เลือกกลุ่มสาระฯ...</option>
+                                            <option value="ภาษาไทย">ภาษาไทย</option>
+                                            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                                            <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                                            <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+                                            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                                            <option value="ศิลปะ">ศิลปะ</option>
+                                            <option value="การงานอาชีพ">การงานอาชีพ</option>
+                                            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                                            <option value="กิจกรรมพัฒนาผู้เรียน">กิจกรรมพัฒนาผู้เรียน</option>
+                                            <option value="ปฐมวัย">ปฐมวัย</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- ภาระงาน -->
+                                    <div class="col-md-4">
+                                        <label for="workload" class="form-label">ภาระงาน (ชั่วโมง/สัปดาห์) <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.5" class="form-control" id="workload" placeholder="เช่น 20" required>
+                                            <span class="input-group-text">ชั่วโมง</span>
+                                        </div>
+                                        <div class="form-text">ตามที่ ก.ค.ศ. กำหนด</div>
+                                    </div>
+
+                                    <!-- ประเด็นท้าทาย -->
+                                    <div class="col-md-8">
+                                        <label for="challenge" class="form-label">ประเด็นท้าทายเรื่อง <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="challenge" placeholder="ระบุชื่อเรื่องประเด็นท้าทายในการพัฒนาผลลัพธ์การเรียนรู้ของผู้เรียน" required>
+                                    </div>
+
+                                    <!-- ลิงก์ไฟล์ PA -->
+                                    <div class="col-12">
+                                        <label for="fileLink" class="form-label">ลิงก์ไฟล์ข้อตกลงในการพัฒนางาน (Google Drive / PDF) <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="fas fa-link"></i></span>
+                                            <input type="url" class="form-control" id="fileLink" placeholder="https://..." required>
+                                        </div>
+                                        <div class="form-text text-primary"><i class="fas fa-info-circle"></i> โปรดตั้งค่าการแชร์ไฟล์เป็น "ทุกคนที่มีลิงก์สามารถอ่านได้" ก่อนนำมาวาง</div>
+                                    </div>
+
+                                    <div class="col-12 text-center mt-4">
+                                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                                            <i class="fas fa-save me-2"></i> บันทึกและส่งข้อมูล
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View: Report -->
+        <div id="view-report" class="view-section">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5><i class="fas fa-table me-2"></i> ทะเบียนรายงานการส่งข้อตกลง (PA) ปี 2569</h5>
+                    <button class="btn btn-outline-primary btn-sm" onclick="renderTable()">
+                        <i class="fas fa-sync-alt"></i> รีเฟรชข้อมูล
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>วันเวลาที่ส่ง</th>
+                                    <th>ชื่อ - นามสกุล</th>
+                                    <th>ตำแหน่ง</th>
+                                    <th>กลุ่มสาระฯ</th>
+                                    <th>ภาระงาน (ชม.)</th>
+                                    <th style="width: 25%;">ประเด็นท้าทาย</th>
+                                    <th class="text-center">เอกสาร</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- ข้อมูลจะถูกแทรกที่นี่ผ่าน JavaScript -->
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-4">ยังไม่มีข้อมูลการส่งงาน</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal: Settings (For Google Web App URL) -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title"><i class="fas fa-cogs me-2"></i> ตั้งค่าการเชื่อมต่อฐานข้อมูล</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> <strong>สำหรับผู้ดูแลระบบ:</strong> เพื่อให้ข้อมูลถูกบันทึกลง Google Sheets และแจ้งเตือนผ่าน Line แจ้งเตือน โปรดนำ <strong>Web App URL</strong> ที่ได้จากการ Deploy Google Apps Script มาใส่ที่นี่
+                    </div>
+                    <div class="mb-3">
+                        <label for="gasUrlInput" class="form-label">Google Web App URL</label>
+                        <input type="text" class="form-control" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted small">ข้อมูลทดสอบบนหน้าเว็บจะถูกเก็บไว้ชั่วคราว</span>
+                        <button class="btn btn-outline-danger btn-sm" onclick="clearLocalData()">ล้างข้อมูลทดสอบในระบบ</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">ปิด</button>
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">บันทึกการตั้งค่า</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application Logic -->
+    <script>
+        // Array เพื่อเก็บข้อมูลจำลองสำหรับการแสดงผลหน้ารายงาน (ทำงานบน Browser)
+        let localPaData = JSON.parse(localStorage.getItem('paData')) || [];
+        
+        // โหลดตั้งค่า URL ของ Google Apps Script
+        let gasUrl = localStorage.getItem('gasUrl') || 'https://script.google.com/macros/s/AKfycbzyjn5OMrjED-nufgIR7wjrWeL6fdDg9Xe2oF3BukyLgeJSeWiwril329L3Qk6P-2k/exec';
+        document.getElementById('gasUrlInput').value = gasUrl;
+
+        // สลับหน้าจอ (Navigation)
+        function switchView(viewId) {
+            // Update Navigation active state
+            document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+            document.getElementById('nav-' + viewId).classList.add('active');
+
+            // Show/Hide views
+            document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            // ถ้าย้ายมาหน้ารายงาน ให้ดึงข้อมูลมาแสดง
+            if(viewId === 'report') {
+                renderTable();
+            }
+        }
+
+        // จัดการเมื่อกดปุ่ม Submit ฟอร์ม
+        document.getElementById('paForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // ดึงข้อมูลจากฟอร์ม
+            const formData = {
+                prefix: document.getElementById('prefix').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                position: document.getElementById('position').value,
+                department: document.getElementById('department').value,
+                workload: document.getElementById('workload').value,
+                challenge: document.getElementById('challenge').value,
+                link: document.getElementById('fileLink').value,
+                timestamp: new Date().toLocaleString('th-TH')
+            };
+
+            // แสดงหน้าโหลด
+            Swal.fire({
+                title: 'กำลังส่งข้อมูล...',
+                html: 'กรุณารอสักครู่ ระบบกำลังประมวลผล',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // 1. จำลองการบันทึกลง Local Storage เพื่อให้หน้ารายงานแสดงผลได้ทันที
+            localPaData.unshift(formData); // เพิ่มไปบนสุด
+            localStorage.setItem('paData', JSON.stringify(localPaData));
+
+            // 2. ถ้ามีการตั้งค่า Google Web App URL ไว้ ให้ส่งข้อมูลไปยัง Google Sheets (เบื้องหลัง)
+            if (gasUrl && gasUrl.trim() !== '') {
+                fetch(gasUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', // สำคัญมาก สำหรับการยิงจาก Browser ไปหา Google Apps Script ป้องกัน CORS error
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                }).then(() => {
+                    showSuccess();
+                }).catch(error => {
+                    console.error('Error sending to GAS:', error);
+                    // ถึงแม้จะ error เครือข่าย แต่เราบันทึกลง Local แล้ว ก็แสดงว่าสำเร็จในหน้าเว็บ
+                    showSuccess(); 
+                });
+            } else {
+                // ถ้าไม่ได้ตั้งค่า GAS URL ก็แสดงว่าสำเร็จเลย (ทำงานเฉพาะหน้าเว็บ)
+                setTimeout(() => {
+                    showSuccess();
+                }, 800);
+            }
+        });
+
+        function showSuccess() {
+            Swal.fire({
+                icon: 'success',
+                title: 'ส่งข้อมูลสำเร็จ!',
+                text: 'ระบบได้บันทึกข้อตกลง PA ของท่านเรียบร้อยแล้ว',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#3498db'
+            }).then(() => {
+                document.getElementById('paForm').reset();
+                switchView('report');
+            });
+        }
+
+        // แสดงผลตารางรายงาน
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (localPaData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">ยังไม่มีข้อมูลการส่งงาน</td></tr>';
+                return;
+            }
+
+            localPaData.forEach((data, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><small class="text-muted">${data.timestamp}</small></td>
+                    <td class="fw-medium">${data.prefix}${data.firstName} ${data.lastName}</td>
+                    <td>${data.position}</td>
+                    <td>${data.department}</td>
+                    <td class="text-center">${data.workload}</td>
+                    <td>
+                        <div class="text-truncate" style="max-width: 200px;" title="${data.challenge}">
+                            ${data.challenge}
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <a href="${data.link}" target="_blank" class="btn btn-sm btn-outline-primary" title="เปิดเอกสาร">
+                            <i class="fas fa-file-pdf"></i> เปิดดู
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // จัดการการตั้งค่า
+        function saveSettings() {
+            const urlInput = document.getElementById('gasUrlInput').value;
+            localStorage.setItem('gasUrl', urlInput);
+            gasUrl = urlInput;
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('settingsModal'));
+            modal.hide();
+
+            Swal.fire({
+                icon: 'success',
+                title: 'บันทึกการตั้งค่าสำเร็จ',
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000
+            });
+        }
+
+        function clearLocalData() {
+            Swal.fire({
+                title: 'ยืนยันการล้างข้อมูล?',
+                text: "ข้อมูลทดสอบในหน้ารายงานทั้งหมดจะหายไป (ไม่กระทบกับ Google Sheets)",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.removeItem('paData');
+                    localPaData = [];
+                    renderTable();
+                    Swal.fire('ลบข้อมูลแล้ว!', '', 'success');
+                }
+            })
+        }
+
+        // โหลดข้อมูลครั้งแรก
+        renderTable();
+    </script>
+</body>
+</html>
