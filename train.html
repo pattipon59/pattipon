@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรายงานการอบรม - โรงเรียนขัวเรียงศึกษา</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 2px solid #f0f0f0;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 20px 25px;
+        }
+        .card-header h4 {
+            margin: 0;
+            color: #1e3c72;
+            font-weight: 600;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #555;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            transition: all 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(30, 60, 114, 0.15);
+            border-color: #1e3c72;
+        }
+        .btn-primary {
+            background-color: #1e3c72;
+            border-color: #1e3c72;
+            border-radius: 8px;
+            padding: 10px 25px;
+            font-weight: 500;
+        }
+        .btn-primary:hover {
+            background-color: #152b52;
+            border-color: #152b52;
+        }
+        .nav-pills .nav-link {
+            color: #555;
+            border-radius: 8px;
+            padding: 10px 20px;
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #1e3c72;
+            color: #fff;
+        }
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .image-preview {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: 600;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .badge-position {
+            background-color: #e3f2fd;
+            color: #1565c0;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        /* Loader */
+        #loader {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div id="loader">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <h5 class="mt-3" style="color: #1e3c72;" id="loaderText">กำลังบันทึกข้อมูลและอัพโหลดไฟล์...</h5>
+        <p class="text-muted small">โปรดรอสักครู่ ห้ามปิดหน้าต่างนี้</p>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-school me-2"></i> โรงเรียนขัวเรียงศึกษา
+            </a>
+            <span class="navbar-text text-light opacity-75 d-none d-md-block">
+                ระบบรายงานการอบรมและพัฒนาตนเอง (ต.ค. 2568 - มี.ค. 2569)
+            </span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-pills mb-4" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane" type="button" role="tab" aria-selected="true">
+                    <i class="fas fa-edit me-2"></i> บันทึกการอบรม
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="report-tab" data-bs-toggle="tab" data-bs-target="#report-pane" type="button" role="tab" aria-selected="false">
+                    <i class="fas fa-list me-2"></i> ผลการรายงาน
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="myTabContent">
+            
+            <!-- Tab 1: Form -->
+            <div class="tab-pane fade show active" id="form-pane" role="tabpanel" tabindex="0">
+                <div class="card">
+                    <div class="card-header">
+                        <h4><i class="fas fa-file-alt me-2"></i> แบบฟอร์มรายงานการอบรม</h4>
+                        <p class="text-muted mb-0 mt-1" style="font-size: 0.9rem;">กรุณากรอกข้อมูลการพัฒนาตนเองในรอบ 6 เดือน (ตุลาคม 2568 - มีนาคม 2569)</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="trainingForm">
+                            
+                            <h5 class="mb-3 text-primary border-bottom pb-2">1. ข้อมูลส่วนตัว</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-2">
+                                    <label class="form-label">คำนำหน้า <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="prefix" required>
+                                        <option value="">เลือก...</option>
+                                        <option value="นาย">นาย</option>
+                                        <option value="นาง">นาง</option>
+                                        <option value="นางสาว">นางสาว</option>
+                                        <option value="ว่าที่ ร.ต.">ว่าที่ ร.ต.</option>
+                                        <option value="ว่าที่ ร.ต. หญิง">ว่าที่ ร.ต. หญิง</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label">ชื่อ <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="firstName" placeholder="ชื่อจริง (ไม่ต้องระบุคำนำหน้า)" required>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label">นามสกุล <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="lastName" placeholder="นามสกุล" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">ตำแหน่ง/วิทยฐานะ <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="position" required>
+                                        <option value="">เลือกตำแหน่ง...</option>
+                                        <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                                        <option value="พนักงานราชการ">พนักงานราชการ</option>
+                                        <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                                        <option value="ครูชำนาญการ">ครู (ชำนาญการ)</option>
+                                        <option value="ครูชำนาญการพิเศษ">ครู (ชำนาญการพิเศษ)</option>
+                                        <option value="ครูเชี่ยวชาญ">ครู (เชี่ยวชาญ)</option>
+                                        <option value="ครูเชี่ยวชาญพิเศษ">ครู (เชี่ยวชาญพิเศษ)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">กลุ่มสาระการเรียนรู้ <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="department" required>
+                                        <option value="">เลือกกลุ่มสาระฯ...</option>
+                                        <option value="ภาษาไทย">ภาษาไทย</option>
+                                        <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                                        <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                                        <option value="สังคมศึกษา ศาสนา และวัฒนธรรม">สังคมศึกษา ศาสนา และวัฒนธรรม</option>
+                                        <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                                        <option value="ศิลปะ">ศิลปะ</option>
+                                        <option value="การงานอาชีพ">การงานอาชีพ</option>
+                                        <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                                        <option value="กิจกรรมพัฒนาผู้เรียน">กิจกรรมพัฒนาผู้เรียน</option>
+                                        <option value="ปฐมวัย">ปฐมวัย</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h5 class="mb-3 text-primary border-bottom pb-2">2. ข้อมูลการอบรม/พัฒนาตนเอง</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-12">
+                                    <label class="form-label">เรื่องที่อบรม/สัมมนา/ศึกษาดูงาน <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="topic" placeholder="ระบุชื่อหลักสูตร หรือหัวข้อการอบรม" required>
+                                </div>
+                                <div class="col-md-8">
+                                    <label class="form-label">หน่วยงานที่จัด <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="organizer" placeholder="ระบุชื่อหน่วยงาน" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">จำนวนชั่วโมง <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="hours" min="1" placeholder="เช่น 6" required>
+                                        <span class="input-group-text">ชั่วโมง</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h5 class="mb-3 text-primary border-bottom pb-2">3. หลักฐานอ้างอิง</h5>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">อัพโหลดภาพกิจกรรม (ไม่เกิน 4 ภาพ)</label>
+                                    <input type="file" class="form-control" id="activityImages" accept="image/*" multiple>
+                                    <div class="form-text text-muted">รองรับไฟล์ .jpg, .png สูงสุด 4 ไฟล์</div>
+                                    <div class="image-preview-container" id="imagesPreview"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">อัพโหลดเกียรติบัตร (ถ้ามี)</label>
+                                    <input type="file" class="form-control" id="certificateImage" accept="image/*,.pdf">
+                                    <div class="form-text text-muted">ไฟล์รูปภาพ หรือ PDF (1 ไฟล์)</div>
+                                    <div class="image-preview-container" id="certPreview"></div>
+                                </div>
+                                <div class="col-md-12">
+                                    <label class="form-label">ลิงก์ (URL) เอกสารรายงานเพิ่มเติม (ถ้ามี)</label>
+                                    <input type="url" class="form-control" id="reportUrl" placeholder="https://drive.google.com/...">
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg px-5">
+                                    <i class="fas fa-save me-2"></i> บันทึกข้อมูลรายงาน
+                                </button>
+                                <button type="reset" class="btn btn-light btn-lg px-4 ms-2" id="btnReset">
+                                    ล้างฟอร์ม
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Report Results -->
+            <div class="tab-pane fade" id="report-pane" role="tabpanel" tabindex="0">
+                <div class="card">
+                    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <h4 class="mb-0"><i class="fas fa-table me-2"></i> ผลการรายงานการอบรม</h4>
+                        
+                        <!-- Filter Area -->
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="input-group" style="max-width: 250px;">
+                                <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" id="searchInput" class="form-control" placeholder="ค้นหาชื่อ, หัวข้อ, หน่วยงาน...">
+                            </div>
+                            <span class="badge bg-primary rounded-pill py-2 px-3" id="totalRecordBadge" style="white-space: nowrap;">รวม 0 รายการ</span>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="dataTable">
+                                <thead>
+                                    <tr>
+                                        <th width="5%" class="text-center">ลำดับ</th>
+                                        <th width="20%">ชื่อ-สกุล</th>
+                                        <th width="15%">ตำแหน่ง</th>
+                                        <th width="30%">เรื่องที่อบรม</th>
+                                        <th width="10%" class="text-center">ชั่วโมง</th>
+                                        <th width="20%" class="text-center">หลักฐาน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <!-- Data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="noDataMessage" class="text-center py-5 text-muted" style="display: none;">
+                            <i class="fas fa-folder-open fa-3x mb-3 text-light-gray"></i>
+                            <h5 id="noDataTitle">ยังไม่มีข้อมูลการรายงาน</h5>
+                            <p id="noDataSub">โปรดไปที่แท็บ "บันทึกการอบรม" เพื่อเพิ่มข้อมูล</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Application Logic -->
+    <script>
+        // ==========================================
+        // CONFIGURATION
+        // ==========================================
+        // เปลี่ยนเป็น true และใส่ Web App URL เมื่อพร้อมใช้งาน Google Sheets
+        const USE_GOOGLE_SHEETS = true; 
+        const GOOGLE_SHEET_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxvrDWONqCH1cC20Xct2Obtx_4SIbU6LFnB_WsSdJymrQAVbunYCV7v1juD4UElvjBX/exec"; 
+        // ==========================================
+
+        const LOCAL_STORAGE_KEY = 'khuariang_training_records';
+        let records = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
+
+        // DOM Elements
+        const form = document.getElementById('trainingForm');
+        const activityImagesInput = document.getElementById('activityImages');
+        const imagesPreview = document.getElementById('imagesPreview');
+        const certificateImageInput = document.getElementById('certificateImage');
+        const certPreview = document.getElementById('certPreview');
+        const btnReset = document.getElementById('btnReset');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loaderText');
+        const searchInput = document.getElementById('searchInput');
+
+        // Initial render
+        renderTable();
+
+        // Search Input Event Listener
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            renderTable(searchTerm);
+        });
+
+        // Image Preview Logic (Activity Images - Max 4)
+        activityImagesInput.addEventListener('change', function(e) {
+            imagesPreview.innerHTML = '';
+            const files = Array.from(this.files);
+            
+            if (files.length > 4) {
+                Swal.fire('ข้อควรระวัง', 'สามารถอัพโหลดภาพกิจกรรมได้สูงสุด 4 ภาพเท่านั้น', 'warning');
+                this.value = ''; // Reset
+                return;
+            }
+
+            files.forEach(file => {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.className = 'image-preview';
+                        imagesPreview.appendChild(img);
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // Image Preview Logic (Certificate - Max 1)
+        certificateImageInput.addEventListener('change', function(e) {
+            certPreview.innerHTML = '';
+            const file = this.files[0];
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'image-preview';
+                    certPreview.appendChild(img);
+                }
+                reader.readAsDataURL(file);
+            } else if (file && file.type === 'application/pdf') {
+                certPreview.innerHTML = '<div class="p-3 border rounded text-center" style="width:100px; height:100px;"><i class="fas fa-file-pdf fa-2x text-danger mb-1"></i><br><small>PDF</small></div>';
+            }
+        });
+
+        // Reset Form
+        btnReset.addEventListener('click', () => {
+            imagesPreview.innerHTML = '';
+            certPreview.innerHTML = '';
+        });
+
+        // ฟังก์ชันบีบอัดรูปภาพและแปลงเป็น Base64 (ป้องกันขนาดไฟล์ใหญ่เกินไปเมื่อส่งไป Google Sheet)
+        const resizeAndToBase64 = (file, maxWidth = 1024, maxHeight = 1024) => new Promise((resolve, reject) => {
+            if (!file) resolve(null);
+            
+            // ถ้าเป็น PDF ให้อ่านเป็น Base64 ได้เลย ไม่ต้องบีบอัดแบบรูป
+            if (file.type === 'application/pdf') {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve({ name: file.name, type: file.type, data: reader.result });
+                reader.onerror = error => reject(error);
+                return;
+            }
+
+            // ถ้าเป็นรูปภาพ ให้บีบอัด
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    let width = img.width;
+                    let height = img.height;
+
+                    // คำนวณสัดส่วนใหม่
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height *= maxWidth / width;
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width *= maxHeight / height;
+                            height = maxHeight;
+                        }
+                    }
+
+                    // วาดรูปลงบน Canvas เพื่อย่อขนาด
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // แปลงกลับเป็น Base64 แบบ JPEG คุณภาพ 80% (ลดขนาดไฟล์ได้มหาศาล)
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    
+                    // ส่งชื่อไฟล์และชนิดไฟล์ไปพร้อมกัน
+                    resolve({ name: file.name.replace(/\.[^/.]+$/, "") + ".jpg", type: 'image/jpeg', data: dataUrl });
+                };
+                img.onerror = error => reject(error);
+            };
+            reader.onerror = error => reject(error);
+        });
+
+        // Form Submission
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            loader.style.display = 'flex';
+            
+            try {
+                // 1. Gather Data
+                const timestamp = new Date().toLocaleString('th-TH');
+                const formData = {
+                    timestamp: timestamp,
+                    prefix: document.getElementById('prefix').value,
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    position: document.getElementById('position').value,
+                    department: document.getElementById('department').value,
+                    topic: document.getElementById('topic').value,
+                    organizer: document.getElementById('organizer').value,
+                    hours: document.getElementById('hours').value,
+                    reportUrl: document.getElementById('reportUrl').value
+                };
+
+                // 2. ประมวลผลและบีบอัดไฟล์ภาพ
+                loaderText.innerText = 'กำลังเตรียมและบีบอัดไฟล์ภาพ...';
+                const actFiles = Array.from(activityImagesInput.files);
+                const actBase64Promises = actFiles.map(f => resizeAndToBase64(f));
+                formData.images = await Promise.all(actBase64Promises);
+
+                const certFile = certificateImageInput.files[0];
+                formData.certificate = certFile ? await resizeAndToBase64(certFile) : null;
+
+                // 3. Save Data
+                loaderText.innerText = 'กำลังส่งข้อมูลไปยังระบบ...';
+                if (USE_GOOGLE_SHEETS) {
+                    // Send to Google Sheets (Apps Script)
+                    await saveToGoogleSheets(formData);
+                } else {
+                    // Artificial delay for UX
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+                // นำข้อมูลที่เพิ่งกรอกเพิ่มเข้า Array เพื่อให้แสดงในตารางหน้าเว็บทันที (ไม่ว่าจะใช้ Sheet หรือไม่)
+                records.push(formData);
+
+                // บันทึกประวัติการกรอกจำลองไว้ในเบราว์เซอร์ (LocalStorage)
+                try {
+                    // ลดขนาดข้อมูลที่จะเก็บลงเครื่อง (ป้องกัน QuotaExceededError เมื่ออัพโหลดรูปใหญ่)
+                    const optimizedRecords = records.map(rec => ({
+                        ...rec,
+                        // เก็บแค่ชื่อไฟล์เพื่อนำไปนับจำนวนแสดงบน Badge ไม่เก็บข้อมูลรูปทั้งหมดลงเครื่อง
+                        images: rec.images && rec.images.length > 0 ? rec.images.map(img => ({ name: img.name })) : [],
+                        certificate: rec.certificate ? { name: rec.certificate.name } : null
+                    }));
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(optimizedRecords));
+                } catch (storageError) {
+                    console.warn("พื้นที่ LocalStorage ของเบราว์เซอร์เต็ม ไม่สามารถบันทึกประวัติจำลองได้");
+                }
+
+                // 4. Success Actions
+                loader.style.display = 'none';
+                Swal.fire({
+                    title: 'บันทึกสำเร็จ!',
+                    text: 'ข้อมูลการรายงานและไฟล์ถูกบันทึกเรียบร้อยแล้ว',
+                    icon: 'success',
+                    confirmButtonColor: '#1e3c72'
+                }).then(() => {
+                    form.reset();
+                    imagesPreview.innerHTML = '';
+                    certPreview.innerHTML = '';
+                    
+                    // Reset search input on new submission
+                    searchInput.value = '';
+                    renderTable();
+                    
+                    // Switch to report tab
+                    const reportTab = new bootstrap.Tab(document.getElementById('report-tab'));
+                    reportTab.show();
+                });
+
+            } catch (error) {
+                loader.style.display = 'none';
+                console.error(error);
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง', 'error');
+            }
+        });
+
+        // Send Data to Google Sheets Web App
+        async function saveToGoogleSheets(data) {
+            if(!GOOGLE_SHEET_WEB_APP_URL || GOOGLE_SHEET_WEB_APP_URL === "YOUR_WEB_APP_URL_HERE") {
+                throw new Error("ยังไม่ได้ตั้งค่า URL ของ Google Sheets Apps Script");
+            }
+
+            const payload = JSON.stringify(data);
+
+            const response = await fetch(GOOGLE_SHEET_WEB_APP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8', 
+                },
+                body: payload
+            });
+
+            return await response.json().catch(()=> ({status: 'success'})); 
+        }
+
+        // Render Data Table with optional filtering
+        function renderTable(searchTerm = '') {
+            const tbody = document.getElementById('tableBody');
+            const noDataMessage = document.getElementById('noDataMessage');
+            const noDataTitle = document.getElementById('noDataTitle');
+            const noDataSub = document.getElementById('noDataSub');
+            const dataTable = document.getElementById('dataTable');
+            const badge = document.getElementById('totalRecordBadge');
+
+            tbody.innerHTML = '';
+
+            // กรองข้อมูลตามคำค้นหา
+            let filteredRecords = records;
+            if (searchTerm) {
+                filteredRecords = records.filter(record => {
+                    const fullName = `${record.prefix}${record.firstName} ${record.lastName}`.toLowerCase();
+                    const topic = (record.topic || '').toLowerCase();
+                    const organizer = (record.organizer || '').toLowerCase();
+                    const department = (record.department || '').toLowerCase();
+                    
+                    return fullName.includes(searchTerm) || 
+                           topic.includes(searchTerm) || 
+                           organizer.includes(searchTerm) || 
+                           department.includes(searchTerm);
+                });
+            }
+
+            badge.innerText = `รวม ${filteredRecords.length} รายการ`;
+
+            if (filteredRecords.length === 0) {
+                dataTable.style.display = 'none';
+                noDataMessage.style.display = 'block';
+                
+                // เปลี่ยนข้อความกรณีค้นหาแล้วไม่เจอ
+                if (searchTerm) {
+                    noDataTitle.innerText = 'ไม่พบข้อมูลที่ค้นหา';
+                    noDataSub.innerText = `ไม่มีผลลัพธ์สำหรับ "${searchTerm}"`;
+                } else {
+                    noDataTitle.innerText = 'ยังไม่มีข้อมูลการรายงาน';
+                    noDataSub.innerText = 'โปรดไปที่แท็บ "บันทึกการอบรม" เพื่อเพิ่มข้อมูล';
+                }
+                return;
+            }
+
+            dataTable.style.display = 'table';
+            noDataMessage.style.display = 'none';
+
+            // Render newest first from the filtered list
+            [...filteredRecords].reverse().forEach((record, index) => {
+                const tr = document.createElement('tr');
+                
+                // Build evidence buttons
+                let evidenceHTML = '';
+                const originalIndex = records.indexOf(record);
+                
+                if (record.images && record.images.length > 0) {
+                    evidenceHTML += `<a href="javascript:void(0)" onclick="viewImages(${originalIndex})" class="badge bg-success me-1 text-decoration-none"><i class="fas fa-images"></i> ภาพ (${record.images.length})</a>`;
+                }
+                if (record.certificate) {
+                    evidenceHTML += `<a href="javascript:void(0)" onclick="viewCertificate(${originalIndex})" class="badge bg-warning text-dark me-1 text-decoration-none"><i class="fas fa-certificate"></i> เกียรติบัตร</a>`;
+                }
+                if (record.reportUrl) {
+                    evidenceHTML += `<a href="${record.reportUrl}" target="_blank" class="badge bg-info text-dark text-decoration-none"><i class="fas fa-link"></i> ลิงก์</a>`;
+                }
+                if(evidenceHTML === '') evidenceHTML = '<span class="text-muted small">-</span>';
+
+                tr.innerHTML = `
+                    <td class="text-center">${filteredRecords.length - index}</td>
+                    <td>
+                        <div class="fw-bold">${record.prefix}${record.firstName} ${record.lastName}</div>
+                        <div class="small text-muted">${record.department}</div>
+                    </td>
+                    <td><span class="badge-position">${record.position}</span></td>
+                    <td>
+                        <div>${record.topic}</div>
+                        <div class="small text-muted"><i class="fas fa-building me-1"></i>${record.organizer}</div>
+                    </td>
+                    <td class="text-center fw-bold text-primary">${record.hours}</td>
+                    <td class="text-center">${evidenceHTML}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ฟังก์ชันสำหรับดูเกียรติบัตร (Pop-up)
+        window.viewCertificate = function(index) {
+            const record = records[index];
+            if (!record || !record.certificate) return;
+
+            if (record.certificate.data) {
+                if (record.certificate.type === 'application/pdf') {
+                    Swal.fire({
+                        title: 'เกียรติบัตร',
+                        html: `<iframe src="${record.certificate.data}" style="width:100%; height:60vh;" frameborder="0"></iframe>`,
+                        width: '80%',
+                        showCloseButton: true,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'เกียรติบัตร',
+                        imageUrl: record.certificate.data,
+                        imageAlt: 'เกียรติบัตร',
+                        width: 'auto',
+                        showCloseButton: true,
+                        showConfirmButton: false
+                    });
+                }
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ข้อมูลถูกบีบอัด',
+                    text: 'ระบบไม่ได้เก็บไฟล์รูปภาพเก่าไว้ในเบราว์เซอร์เพื่อประหยัดพื้นที่ หากตั้งค่าเชื่อมต่อ Google Sheets แล้ว ให้คลิกดูไฟล์ต้นฉบับใน Google Drive ครับ',
+                    confirmButtonColor: '#1e3c72'
+                });
+            }
+        };
+
+        // ฟังก์ชันสำหรับดูภาพกิจกรรม (Pop-up)
+        window.viewImages = function(index) {
+            const record = records[index];
+            if (!record || !record.images || record.images.length === 0) return;
+
+            if (record.images[0].data) {
+                let imagesHtml = '<div class="d-flex flex-wrap justify-content-center gap-3">';
+                record.images.forEach(img => {
+                    imagesHtml += `<img src="${img.data}" class="img-thumbnail shadow-sm" style="max-width: 100%; max-height: 250px; object-fit: contain;">`;
+                });
+                imagesHtml += '</div>';
+
+                Swal.fire({
+                    title: 'ภาพกิจกรรม',
+                    html: imagesHtml,
+                    width: '80%',
+                    showCloseButton: true,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'ข้อมูลถูกบีบอัด',
+                    text: 'ระบบไม่ได้เก็บไฟล์รูปภาพเก่าไว้ในเบราว์เซอร์เพื่อประหยัดพื้นที่ หากตั้งค่าเชื่อมต่อ Google Sheets แล้ว ให้คลิกดูไฟล์ต้นฉบับใน Google Drive ครับ',
+                    confirmButtonColor: '#1e3c72'
+                });
+            }
+        };
+    </script>
+</body>
+</html>
