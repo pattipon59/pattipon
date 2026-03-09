@@ -43,7 +43,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             z-index: 1050;
@@ -123,8 +123,12 @@
             position: fixed;
             z-index: 999;
             box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
         }
 
+        /* ซ่อน Scrollbar ของ Sidebar แต่ยังเลื่อนได้ */
+        #sidebar::-webkit-scrollbar { width: 0; }
+        
         #sidebar .sidebar-header {
             padding: 20px;
             background: rgba(0,0,0,0.1);
@@ -168,6 +172,33 @@
             padding-left: 20px;
         }
 
+        /* Submenu & Breadcrumb Styling */
+        #sidebar ul li ul.collapse li a {
+            font-size: 0.95em;
+            padding-left: 55px;
+            background: rgba(0,0,0,0.1);
+            border-left: none;
+        }
+        #sidebar ul li ul.collapse li a:hover {
+            background: rgba(255,255,255,0.2);
+            padding-left: 60px;
+            border-left: 3px solid #fff;
+        }
+        
+        .breadcrumb-custom {
+            background: transparent;
+            padding: 0;
+            margin-bottom: 0;
+        }
+        .breadcrumb-custom .breadcrumb-item a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .breadcrumb-custom .breadcrumb-item.active {
+            color: #6c757d;
+        }
+
         /* --- Main Content --- */
         #content {
             width: calc(100% - var(--sidebar-width));
@@ -176,6 +207,7 @@
             position: absolute;
             top: 0;
             right: 0;
+            background-color: var(--bg-light);
         }
 
         /* Navbar */
@@ -183,6 +215,9 @@
             background: white;
             box-shadow: 0 2px 15px rgba(0,0,0,0.05);
             padding: 15px 25px;
+            position: sticky;
+            top: 0;
+            z-index: 998;
         }
 
         .btn-toggle {
@@ -213,7 +248,7 @@
 
         .module-card.disabled {
             opacity: 0.6;
-            cursor: not-allowed;
+            cursor: not-allowed !important;
             filter: grayscale(100%);
         }
 
@@ -251,6 +286,12 @@
         .bg-personnel { background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); }
         .bg-general { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .bg-budget { background: linear-gradient(135deg, #F2994A 0%, #F2C94C 100%); }
+        
+        .bg-sub-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .bg-sub-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .bg-sub-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .bg-sub-4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .bg-sub-5 { background: linear-gradient(135deg, #f83600 0%, #f9d423 100%); }
 
         .card-title {
             font-weight: 600;
@@ -278,40 +319,6 @@
             object-fit: cover;
             border: 2px solid var(--primary-blue);
         }
-
-        /* Submenu & Breadcrumb Styling */
-        #sidebar ul li ul.collapse li a {
-            font-size: 0.95em;
-            padding-left: 55px;
-            background: rgba(0,0,0,0.1);
-            border-left: none;
-        }
-        #sidebar ul li ul.collapse li a:hover {
-            background: rgba(255,255,255,0.2);
-            padding-left: 60px;
-            border-left: 3px solid #fff;
-        }
-        
-        .breadcrumb-custom {
-            background: transparent;
-            padding: 0;
-            margin-bottom: 0;
-        }
-        .breadcrumb-custom .breadcrumb-item a {
-            color: var(--primary-blue);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .breadcrumb-custom .breadcrumb-item.active {
-            color: #6c757d;
-        }
-
-        /* Sub Module Colors */
-        .bg-sub-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .bg-sub-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-        .bg-sub-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-        .bg-sub-4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
-        .bg-sub-5 { background: linear-gradient(135deg, #f83600 0%, #f9d423 100%); }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -359,9 +366,12 @@
                 </button>
             </form>
 
-            <div class="mt-4 text-muted" style="font-size: 0.8em;">
-                ทดสอบ: admin/1234 (สิทธิ์ Admin)<br>
-                ทดสอบ: user/1234 (สิทธิ์ User)
+            <div class="mt-4 text-muted text-start" style="font-size: 0.8em; background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                <strong><i class="fa-solid fa-key"></i> บัญชีทดสอบระบบ:</strong><br>
+                👤 <code>admin / 1234</code> (ผู้อำนวยการ - เข้าได้ทุกระบบ)<br>
+                👤 <code>teacher / 1234</code> (ครู - เข้าวิชาการ, บุคคล, ทั่วไป)<br>
+                👤 <code>staff / 1234</code> (เจ้าหน้าที่ - เข้าบุคคล, ทั่วไป, งบประมาณ)<br>
+                👤 <code>budget / 1234</code> (การเงิน - เข้าเฉพาะงานงบประมาณ)
             </div>
         </div>
     </div>
@@ -426,7 +436,7 @@
                 </li>
             </ul>
             
-            <div class="p-4 mt-5">
+            <div class="p-4 mt-3 mb-5">
                 <div class="bg-white text-center p-3 rounded-4 shadow-sm" style="color: var(--text-dark);">
                     <p class="mb-2 fs-6 fw-bold text-primary"><i class="fa-solid fa-headset"></i> แจ้งปัญหา</p>
                     <small class="text-muted">ติดต่อศูนย์ IT Support</small>
@@ -483,7 +493,7 @@
                         
                         <!-- Card 1 -->
                         <div class="col-12 col-md-6 col-lg-3">
-                            <div class="card module-card h-100 p-4" onclick="accessModule('academic')" style="cursor: pointer;">
+                            <div class="card module-card h-100 p-4" id="academic-card" onclick="accessModule('academic')" style="cursor: pointer;">
                                 <div class="card-body p-0">
                                     <div class="icon-box bg-academic">
                                         <i class="fa-solid fa-laptop-file"></i>
@@ -492,14 +502,14 @@
                                     <p class="card-text">จัดการหลักสูตร, วัดผลประเมินผล, ตารางสอน, ทะเบียนนักเรียน และแผนการเรียน</p>
                                 </div>
                                 <div class="mt-3 text-end">
-                                    <span class="text-primary fw-bold" style="font-size: 0.9em;">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i></span>
+                                    <span class="text-primary fw-bold" id="academic-status" style="font-size: 0.9em;">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card 2 -->
                         <div class="col-12 col-md-6 col-lg-3">
-                            <div class="card module-card h-100 p-4" onclick="accessModule('personnel')" style="cursor: pointer;">
+                            <div class="card module-card h-100 p-4" id="personnel-card" onclick="accessModule('personnel')" style="cursor: pointer;">
                                 <div class="card-body p-0">
                                     <div class="icon-box bg-personnel">
                                         <i class="fa-solid fa-user-tie"></i>
@@ -508,14 +518,14 @@
                                     <p class="card-text">ฐานข้อมูลครูและบุคลากร, การลา, ประเมินวิทยฐานะ, อบรมพัฒนา และสวัสดิการ</p>
                                 </div>
                                 <div class="mt-3 text-end">
-                                    <span class="text-primary fw-bold" style="font-size: 0.9em;">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i></span>
+                                    <span class="text-primary fw-bold" id="personnel-status" style="font-size: 0.9em;">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i></span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card 3 -->
                         <div class="col-12 col-md-6 col-lg-3">
-                            <div class="card module-card h-100 p-4" onclick="accessModule('general')" style="cursor: pointer;">
+                            <div class="card module-card h-100 p-4" id="general-card" onclick="accessModule('general')" style="cursor: pointer;">
                                 <div class="card-body p-0">
                                     <div class="icon-box bg-general">
                                         <i class="fa-solid fa-building-flag"></i>
@@ -524,12 +534,12 @@
                                     <p class="card-text">งานสารบรรณ, อาคารสถานที่, ยานพาหนะ, ประชาสัมพันธ์ และธุรการโรงเรียน</p>
                                 </div>
                                 <div class="mt-3 text-end">
-                                    <span class="text-primary fw-bold" style="font-size: 0.9em;">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i></span>
+                                    <span class="text-primary fw-bold" id="general-status" style="font-size: 0.9em;">เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i></span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Card 4 (Restricted for Admin) -->
+                        <!-- Card 4 (Restricted) -->
                         <div class="col-12 col-md-6 col-lg-3">
                             <div class="card module-card h-100 p-4" id="budget-card" onclick="accessModule('budget')" style="cursor: pointer;">
                                 <div class="card-body p-0">
@@ -585,67 +595,47 @@
                         </div>
                     </div>
 
-                    <!-- 5 Sub-modules Cards -->
                     <div class="row g-4 mb-5">
-                        <!-- 1. งานทะเบียน -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ งานทะเบียน')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-1">
-                                        <i class="fa-solid fa-address-card"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-1"><i class="fa-solid fa-address-card"></i></div>
                                     <h5 class="card-title">1. งานทะเบียน</h5>
                                     <p class="card-text">ขึ้นทะเบียนนักเรียน, ย้ายเข้า/ออก, พิมพ์ ปพ.1-ปพ.7, สถิตินักเรียน</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 2. งานหลักสูตร -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ งานหลักสูตร')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-2">
-                                        <i class="fa-solid fa-book"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-2"><i class="fa-solid fa-book"></i></div>
                                     <h5 class="card-title">2. งานหลักสูตร</h5>
                                     <p class="card-text">จัดแผนการเรียน, กำหนดโครงสร้างรายวิชา, โครงการสอน</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 3. งานวัดผลประเมินผล -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ งานวัดผลประเมินผล')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-3">
-                                        <i class="fa-solid fa-clipboard-check"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-3"><i class="fa-solid fa-clipboard-check"></i></div>
                                     <h5 class="card-title">3. งานวัดผลประเมินผล</h5>
                                     <p class="card-text">บันทึกคะแนน, ตัดเกรด, ประเมินคุณลักษณะ, พิมพ์ใบรายงานผล</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 4. ตารางเรียน -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ตารางเรียน')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-4">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-4"><i class="fa-solid fa-calendar-days"></i></div>
                                     <h5 class="card-title">4. ตารางเรียน</h5>
                                     <p class="card-text">ตรวจสอบตารางเรียนของนักเรียนแต่ละห้อง, วิชาเรียนและครูผู้สอน</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 5. ตารางสอน -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ตารางสอน')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-5">
-                                        <i class="fa-solid fa-chalkboard-user"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-5"><i class="fa-solid fa-chalkboard-user"></i></div>
                                     <h5 class="card-title">5. ตารางสอน</h5>
                                     <p class="card-text">จัดการตารางสอนครู, จัดห้องเรียน, จัดครูแทน, คาบว่าง</p>
                                 </div>
@@ -653,7 +643,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- ====== End Academic Module View ====== -->
 
                 <!-- ====== Personnel Module View ====== -->
                 <div id="personnel-module-view" style="display: none;">
@@ -666,7 +655,6 @@
                                 </ol>
                             </nav>
                             <h2 class="fw-bold" style="color: var(--primary-blue);">ระบบบริหารงานบุคคล</h2>
-                            <p class="text-muted fs-6 mb-0">เลือกเมนูย่อยเพื่อเข้าสู่ระบบงานที่ต้องการ</p>
                         </div>
                         <div>
                             <button class="btn btn-outline-secondary rounded-pill shadow-sm px-4" onclick="goToDashboard()">
@@ -675,49 +663,36 @@
                         </div>
                     </div>
 
-                    <!-- 3 Sub-modules Cards -->
                     <div class="row g-4 mb-5">
-                        <!-- 1. ระบบการลา -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ระบบการลา')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-personnel">
-                                        <i class="fa-solid fa-calendar-minus"></i>
-                                    </div>
+                                    <div class="icon-box bg-personnel"><i class="fa-solid fa-calendar-minus"></i></div>
                                     <h5 class="card-title">1. ระบบการลา</h5>
-                                    <p class="card-text">ยื่นใบลาออนไลน์, อนุมัติการลา, ตรวจสอบวันลาคงเหลือ, สถิติและประวัติการลา</p>
+                                    <p class="card-text">ยื่นใบลาออนไลน์, อนุมัติการลา, ตรวจสอบวันลาคงเหลือ, สถิติ</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 2. ระบบการอบรมและพัฒนาตนเอง -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ระบบการอบรมและพัฒนาตนเอง')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-2">
-                                        <i class="fa-solid fa-chalkboard-user"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-2"><i class="fa-solid fa-chalkboard-user"></i></div>
                                     <h5 class="card-title">2. การอบรมและพัฒนาตนเอง</h5>
-                                    <p class="card-text">บันทึกประวัติการอบรม, PLC, สัมมนา, ศึกษาดูงาน, และบันทึกรายงานผล</p>
+                                    <p class="card-text">บันทึกประวัติการอบรม, PLC, สัมมนา, ศึกษาดูงาน</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 3. ข้อมูลครูรายบุคคล -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ข้อมูลครูรายบุคคล')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-1">
-                                        <i class="fa-solid fa-id-badge"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-1"><i class="fa-solid fa-id-badge"></i></div>
                                     <h5 class="card-title">3. ข้อมูลครูรายบุคคล</h5>
-                                    <p class="card-text">ประวัติส่วนตัว, ประวัติการศึกษา, เครื่องราชอิสริยาภรณ์, วิทยฐานะและผลงาน</p>
+                                    <p class="card-text">ประวัติส่วนตัว, ประวัติการศึกษา, เครื่องราชฯ, วิทยฐานะ</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- ====== End Personnel Module View ====== -->
 
                 <!-- ====== General Module View ====== -->
                 <div id="general-module-view" style="display: none;">
@@ -730,7 +705,6 @@
                                 </ol>
                             </nav>
                             <h2 class="fw-bold" style="color: var(--primary-blue);">ระบบงานทั่วไป</h2>
-                            <p class="text-muted fs-6 mb-0">เลือกเมนูย่อยเพื่อเข้าสู่ระบบงานที่ต้องการ</p>
                         </div>
                         <div>
                             <button class="btn btn-outline-secondary rounded-pill shadow-sm px-4" onclick="goToDashboard()">
@@ -739,49 +713,36 @@
                         </div>
                     </div>
 
-                    <!-- Sub-modules Cards -->
                     <div class="row g-4 mb-5">
-                        <!-- 1. งานกิจการนักเรียน -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="accessModule('student-affairs')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-general">
-                                        <i class="fa-solid fa-user-shield"></i>
-                                    </div>
+                                    <div class="icon-box bg-general"><i class="fa-solid fa-user-shield"></i></div>
                                     <h5 class="card-title">1. งานกิจการนักเรียน</h5>
-                                    <p class="card-text">ระบบดูแลช่วยเหลือนักเรียน, บันทึกพฤติกรรม, งานวินัย, สภานักเรียน</p>
+                                    <p class="card-text">ระบบดูแลช่วยเหลือนักเรียน, บันทึกพฤติกรรม, งานวินัย</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 2. งานอาคารสถานที่ -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ งานอาคารสถานที่')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-3">
-                                        <i class="fa-solid fa-building"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-3"><i class="fa-solid fa-building"></i></div>
                                     <h5 class="card-title">2. งานอาคารสถานที่</h5>
                                     <p class="card-text">แจ้งซ่อมแซม, จองห้องประชุม, จัดการคิวรถ, ยานพาหนะ</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 3. งานธุรการและสารบรรณ -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ งานธุรการและสารบรรณ')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-4">
-                                        <i class="fa-solid fa-envelope-open-text"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-4"><i class="fa-solid fa-envelope-open-text"></i></div>
                                     <h5 class="card-title">3. งานธุรการและสารบรรณ</h5>
-                                    <p class="card-text">ระบบรับ-ส่งหนังสือราชการ, ประกาศโรงเรียน, ประชาสัมพันธ์, จัดเก็บเอกสาร</p>
+                                    <p class="card-text">ระบบรับ-ส่งหนังสือราชการ, ประกาศโรงเรียน, ประชาสัมพันธ์</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- ====== End General Module View ====== -->
 
                 <!-- ====== Student Affairs Sub-Module View ====== -->
                 <div id="student-affairs-module-view" style="display: none;">
@@ -795,7 +756,6 @@
                                 </ol>
                             </nav>
                             <h2 class="fw-bold" style="color: var(--primary-blue);">งานกิจการนักเรียน</h2>
-                            <p class="text-muted fs-6 mb-0">เลือกระบบงานย่อยเพื่อเข้าใช้งาน</p>
                         </div>
                         <div>
                             <button class="btn btn-outline-secondary rounded-pill shadow-sm px-4" onclick="accessModule('general')">
@@ -804,23 +764,18 @@
                         </div>
                     </div>
 
-                    <!-- Sub-modules Cards -->
                     <div class="row g-4 mb-5">
-                        <!-- 1. ระบบเช็คการมาเรียน -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ระบบเช็คการมาเรียน')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-1">
-                                        <i class="fa-solid fa-user-check"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-1"><i class="fa-solid fa-user-check"></i></div>
                                     <h5 class="card-title">1. ระบบเช็คการมาเรียน</h5>
-                                    <p class="card-text">เช็คชื่อเข้าแถว, เช็คชื่อรายวิชา, สถิติการมาเรียน, แจ้งเตือนผู้ปกครอง</p>
+                                    <p class="card-text">เช็คชื่อเข้าแถว, เช็คชื่อรายวิชา, สถิติการมาเรียน, แจ้งเตือน</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <!-- ====== End Student Affairs Sub-Module View ====== -->
 
                 <!-- ====== Budget Module View ====== -->
                 <div id="budget-module-view" style="display: none;">
@@ -833,7 +788,6 @@
                                 </ol>
                             </nav>
                             <h2 class="fw-bold" style="color: var(--primary-blue);">ระบบบริหารงานงบประมาณ</h2>
-                            <p class="text-muted fs-6 mb-0">เลือกเมนูย่อยเพื่อเข้าสู่ระบบงานที่ต้องการ (เฉพาะผู้ดูแลระบบ)</p>
                         </div>
                         <div>
                             <button class="btn btn-outline-secondary rounded-pill shadow-sm px-4" onclick="goToDashboard()">
@@ -842,80 +796,56 @@
                         </div>
                     </div>
 
-                    <!-- 6 Sub-modules Cards -->
                     <div class="row g-4 mb-5">
-                        <!-- 1. ระบบการเงิน -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ ระบบการเงิน')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-1">
-                                        <i class="fa-solid fa-coins"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-1"><i class="fa-solid fa-coins"></i></div>
                                     <h5 class="card-title">1. ระบบการเงิน</h5>
                                     <p class="card-text">รับ-จ่ายเงิน, ออกใบเสร็จ, ทะเบียนคุมเงินสด, การโอนเงิน</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 2. บัญชี -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ บัญชี')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-2">
-                                        <i class="fa-solid fa-book-journal-whills"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-2"><i class="fa-solid fa-book-journal-whills"></i></div>
                                     <h5 class="card-title">2. บัญชี</h5>
                                     <p class="card-text">บันทึกบัญชีแยกประเภท, สมุดรายวันทั่วไป, งบทดลอง</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 3. พัสดุ -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ พัสดุ')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-3">
-                                        <i class="fa-solid fa-boxes-stacked"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-3"><i class="fa-solid fa-boxes-stacked"></i></div>
                                     <h5 class="card-title">3. พัสดุ</h5>
                                     <p class="card-text">ทะเบียนคุมทรัพย์สิน, เบิกจ่ายพัสดุ, ตรวจสอบพัสดุประจำปี</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 4. จัดซื้อจัดจ้าง -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ จัดซื้อจัดจ้าง')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-4">
-                                        <i class="fa-solid fa-cart-shopping"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-4"><i class="fa-solid fa-cart-shopping"></i></div>
                                     <h5 class="card-title">4. จัดซื้อจัดจ้าง</h5>
                                     <p class="card-text">ทำรายงานขอซื้อขอจ้าง, e-GP, บันทึกการตรวจรับพัสดุ</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 5. โครงการ -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ โครงการ')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-sub-5">
-                                        <i class="fa-solid fa-project-diagram"></i>
-                                    </div>
+                                    <div class="icon-box bg-sub-5"><i class="fa-solid fa-project-diagram"></i></div>
                                     <h5 class="card-title">5. โครงการ</h5>
                                     <p class="card-text">เสนอโครงการ, อนุมัติงบประมาณโครงการ, ติดตามผลการดำเนินงาน</p>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- 6. รายงานการใช้งบประมาณ -->
                         <div class="col-12 col-md-6 col-lg-4">
                             <div class="card module-card h-100 p-4" onclick="alert('เข้าสู่ รายงานการใช้งบประมาณ')" style="cursor: pointer;">
                                 <div class="card-body p-0">
-                                    <div class="icon-box bg-budget">
-                                        <i class="fa-solid fa-chart-line"></i>
-                                    </div>
+                                    <div class="icon-box bg-budget"><i class="fa-solid fa-chart-line"></i></div>
                                     <h5 class="card-title">6. รายงานการใช้งบประมาณ</h5>
                                     <p class="card-text">สรุปสถานะการใช้จ่ายงบประมาณรายเดือน/รายปี, กราฟแสดงผล</p>
                                 </div>
@@ -923,7 +853,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- ====== End Budget Module View ====== -->
 
             </div>
         </div>
@@ -932,22 +861,15 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.css"></script>
     
-    <!-- Chart.js for beautiful charts -->
+    <!-- Chart.js for charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- App Logic Scripts -->
     <script>
-        // ==========================================
-        // ส่วนของการตั้งค่า Google Sheets (Google Apps Script)
-        // ==========================================
-        // 1. ให้นำ URL ที่ได้จากการ Deploy Google Apps Script มาใส่ในตัวแปรนี้
-        // 2. หากปล่อยว่างไว้ ระบบจะใช้ Mock Data (ระบบจำลอง) เพื่อให้ทดสอบได้ทันที
-        const GOOGLE_SHEET_GAS_URL = ""; 
-
-        // สถานะของผู้ใช้งานปัจจุบัน
+        const GOOGLE_SHEET_GAS_URL = "https://script.google.com/macros/s/AKfycbwy7U3rAn3Is2AhvUGZdWqCFPOXXkqtsVfWhNHwJBx8ZrcJi26upyH3r8yc6jAVhm_y/exec"; 
         let currentUser = null;
 
-        // ฟังก์ชันจัดการการล็อคอิน
+        // Login Handler
         async function handleLogin(e) {
             e.preventDefault();
             const userInp = document.getElementById('username').value;
@@ -955,7 +877,6 @@
             const btn = document.getElementById('btnLogin');
             const errorMsg = document.getElementById('login-error');
 
-            // เปลี่ยนสถานะปุ่ม
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบ...';
             btn.disabled = true;
             errorMsg.style.display = 'none';
@@ -963,38 +884,35 @@
             try {
                 let responseData;
 
-                // หากมีเชื่อม Google Sheets ให้ดึงข้อมูลจาก GAS
                 if (GOOGLE_SHEET_GAS_URL !== "") {
                     const res = await fetch(GOOGLE_SHEET_GAS_URL, {
                         method: 'POST',
                         body: JSON.stringify({ username: userInp, password: passInp }),
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
-                        }
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
                     });
                     responseData = await res.json();
                 } else {
-                    // MOCK DATA (ระบบจำลองการตรวจสอบ)
-                    await new Promise(r => setTimeout(r, 1000)); // หน่วงเวลา 1 วิให้ดูเหมือนโหลดจริง
+                    // MOCK DATA
+                    await new Promise(r => setTimeout(r, 1000));
                     if (userInp === 'admin' && passInp === '1234') {
                         responseData = { success: true, role: 'admin', name: 'ผู้อำนวยการ (Admin)' };
-                    } else if (userInp === 'user' && passInp === '1234') {
-                        responseData = { success: true, role: 'user', name: 'คุณครู (User)' };
+                    } else if (userInp === 'teacher' && passInp === '1234') {
+                        responseData = { success: true, role: 'teacher', name: 'คุณครูสมใจ (Teacher)' };
+                    } else if (userInp === 'staff' && passInp === '1234') {
+                        responseData = { success: true, role: 'staff', name: 'เจ้าหน้าที่สมหมาย (Staff)' };
+                    } else if (userInp === 'budget' && passInp === '1234') {
+                        responseData = { success: true, role: 'finance', name: 'เจ้าหน้าที่การเงิน (Finance)' };
                     } else {
                         responseData = { success: false };
                     }
                 }
 
-                // ตรวจสอบผลลัพธ์
                 if (responseData.success) {
                     currentUser = responseData;
-                    setupDashboard(); // ตั้งค่าหน้าจอหลังล็อกอินสำเร็จ
+                    setupDashboard();
                     
-                    // สลับหน้าจอ
                     document.getElementById('login-view').style.display = 'none';
                     document.getElementById('dashboard-view').style.display = 'flex';
-                    
-                    // เคลียร์ฟอร์ม
                     document.getElementById('loginForm').reset();
                 } else {
                     errorMsg.style.display = 'block';
@@ -1004,109 +922,128 @@
                 errorMsg.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
                 errorMsg.style.display = 'block';
             } finally {
-                // คืนค่าสถานะปุ่ม
                 btn.innerHTML = '<span>เข้าสู่ระบบ</span>';
                 btn.disabled = false;
             }
         }
 
-        // ฟังก์ชันตั้งค่า UI หลังล็อกอิน (เช็คสิทธิ์ Admin / User)
+        // Setup UI base on Role
         function setupDashboard() {
-            // ตั้งค่าชื่อและ Role มุมขวาบน
+            const roleNames = {
+                'admin': 'ผู้อำนวยการ / ผู้ดูแลระบบ',
+                'teacher': 'ครูผู้สอน',
+                'staff': 'เจ้าหน้าที่ / ธุรการ',
+                'finance': 'เจ้าหน้าที่การเงิน / งบประมาณ'
+            };
             document.getElementById('display-username').innerText = currentUser.name;
-            document.getElementById('display-role').innerText = currentUser.role === 'admin' ? 'ผู้ดูแลระบบสูงสุด' : 'ผู้ใช้งานทั่วไป';
+            document.getElementById('display-role').innerText = roleNames[currentUser.role] || 'ผู้ใช้งานทั่วไป';
             document.getElementById('display-avatar').src = `https://ui-avatars.com/api/?name=${currentUser.name}&background=0d6efd&color=fff`;
 
-            // ตรวจสอบสิทธิ์ (Role)
+            const academicCard = document.getElementById('academic-card');
+            const academicStatus = document.getElementById('academic-status');
+            const personnelCard = document.getElementById('personnel-card');
+            const personnelStatus = document.getElementById('personnel-status');
+            const generalCard = document.getElementById('general-card');
+            const generalStatus = document.getElementById('general-status');
             const budgetCard = document.getElementById('budget-card');
             const budgetStatus = document.getElementById('budget-status');
 
-            if (currentUser.role === 'user') {
-                // ถ้าเป็น user ปิดการเข้าถึงงบประมาณ
-                budgetCard.classList.add('disabled');
-                budgetStatus.innerHTML = '<span class="text-danger"><i class="fa-solid fa-lock"></i> เฉพาะ Admin</span>';
-            } else {
-                // ถ้าเป็น admin เปิดการเข้าถึงปกติ
-                budgetCard.classList.remove('disabled');
-                budgetStatus.innerHTML = 'เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i>';
+            // Reset UI
+            [academicCard, personnelCard, generalCard, budgetCard].forEach(card => {
+                if(card) card.classList.remove('disabled');
+            });
+            [academicStatus, personnelStatus, generalStatus, budgetStatus].forEach(status => {
+                if(status) status.innerHTML = 'เข้าสู่ระบบ <i class="fa-solid fa-arrow-right"></i>';
+            });
+
+            const lockedHtml = '<span class="text-danger"><i class="fa-solid fa-lock"></i> ไม่มีสิทธิ์</span>';
+
+            if (currentUser.role === 'teacher') {
+                if(budgetCard) budgetCard.classList.add('disabled');
+                if(budgetStatus) budgetStatus.innerHTML = lockedHtml;
+            } else if (currentUser.role === 'staff') {
+                if(academicCard) academicCard.classList.add('disabled');
+                if(academicStatus) academicStatus.innerHTML = lockedHtml;
+            } else if (currentUser.role === 'finance') {
+                if(academicCard) academicCard.classList.add('disabled');
+                if(academicStatus) academicStatus.innerHTML = lockedHtml;
+                if(personnelCard) personnelCard.classList.add('disabled');
+                if(personnelStatus) personnelStatus.innerHTML = lockedHtml;
+                if(generalCard) generalCard.classList.add('disabled');
+                if(generalStatus) generalStatus.innerHTML = lockedHtml;
             }
         }
 
-        // ฟังก์ชันออกจากระบบ
+        // Logout
         function handleLogout() {
             currentUser = null;
             document.getElementById('dashboard-view').style.display = 'none';
             document.getElementById('login-view').style.display = 'flex';
-            goToDashboard(); // รีเซ็ตหน้าต่างกลับไปหน้าหลัก
+            goToDashboard();
         }
 
-        // ฟังก์ชันจำลองการคลิกเข้าเมนู
+        // Navigate Modules
         function accessModule(module) {
-            if (module === 'budget' && currentUser && currentUser.role !== 'admin') {
-                alert('ขออภัย คุณไม่มีสิทธิ์เข้าถึง "ระบบบริหารงานงบประมาณ" (จำกัดเฉพาะ Admin เท่านั้น)');
-                // ปิดเมนูที่เปิดมาถ้าคลิกจาก Sidebar (ใช้ setTimeout เพื่อรอให้ Bootstrap ทำงานเสร็จก่อน)
-                setTimeout(() => {
-                    let budgetSubmenu = document.getElementById('budgetSubmenu');
-                    if(budgetSubmenu && budgetSubmenu.classList.contains('show')) {
-                        budgetSubmenu.classList.remove('show');
-                    }
+            // Check Permissions
+            if (module === 'budget' && currentUser && currentUser.role === 'teacher') {
+                alert('ขออภัย คุณไม่มีสิทธิ์เข้าถึง "ระบบบริหารงานงบประมาณ" (เฉพาะผู้บริหารและเจ้าหน้าที่)');
+                setTimeout(() => { let m = document.getElementById('budgetSubmenu'); if(m) m.classList.remove('show'); }, 100);
+                return;
+            }
+
+            if (module === 'academic' && currentUser && (currentUser.role === 'staff' || currentUser.role === 'finance')) {
+                alert('ขออภัย คุณไม่มีสิทธิ์เข้าถึง "ระบบบริหารงานวิชาการ"');
+                setTimeout(() => { let m = document.getElementById('academicSubmenu'); if(m) m.classList.remove('show'); }, 100);
+                return;
+            }
+
+            if ((module === 'personnel' || module === 'general' || module === 'student-affairs') && currentUser && currentUser.role === 'finance') {
+                alert('ขออภัย คุณไม่มีสิทธิ์เข้าถึงระบบนี้ (เฉพาะระบบงานงบประมาณเท่านั้น)');
+                setTimeout(() => { 
+                    let p = document.getElementById('personnelSubmenu'); if(p) p.classList.remove('show');
+                    let g = document.getElementById('generalSubmenu'); if(g) g.classList.remove('show');
                 }, 100);
                 return;
             }
 
-            // ซ่อนหน้าจอทั้งหมดก่อน
-            document.getElementById('main-dashboard-view').style.display = 'none';
-            if(document.getElementById('academic-module-view')) document.getElementById('academic-module-view').style.display = 'none';
-            if(document.getElementById('personnel-module-view')) document.getElementById('personnel-module-view').style.display = 'none';
-            if(document.getElementById('general-module-view')) document.getElementById('general-module-view').style.display = 'none';
-            if(document.getElementById('student-affairs-module-view')) document.getElementById('student-affairs-module-view').style.display = 'none';
-            if(document.getElementById('budget-module-view')) document.getElementById('budget-module-view').style.display = 'none';
+            // Hide all views
+            ['main', 'academic', 'personnel', 'general', 'student-affairs', 'budget'].forEach(m => {
+                let el = document.getElementById(m + (m==='main'?'-dashboard-view':'-module-view'));
+                if(el) el.style.display = 'none';
+            });
 
-            // แสดงหน้าจอที่เลือก
-            if (module === 'academic') {
-                document.getElementById('academic-module-view').style.display = 'block';
-            } else if (module === 'personnel') {
-                document.getElementById('personnel-module-view').style.display = 'block';
-            } else if (module === 'general') {
-                document.getElementById('general-module-view').style.display = 'block';
-            } else if (module === 'student-affairs') {
-                document.getElementById('student-affairs-module-view').style.display = 'block';
-            } else if (module === 'budget') {
-                document.getElementById('budget-module-view').style.display = 'block';
+            // Show selected view
+            let selectedEl = document.getElementById(module + '-module-view');
+            if(selectedEl) {
+                selectedEl.style.display = 'block';
             } else {
-                alert(`กำลังเข้าสู่ระบบ...`);
-                document.getElementById('main-dashboard-view').style.display = 'block'; // คืนค่าหน้าหลักถ้าหาไม่เจอ
-                return; // ออกจากฟังก์ชันเพื่อไม่ให้ปิด sidebar ด้านล่าง
+                alert('กำลังเข้าสู่ระบบ...');
+                document.getElementById('main-dashboard-view').style.display = 'block';
             }
             
-            // ปิด Sidebar อัตโนมัติหากใช้งานบนหน้าจอมือถือ
+            // Auto-close sidebar on mobile
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('active');
                 document.getElementById('content').classList.remove('active');
             }
         }
 
-        // ฟังก์ชันกลับไปหน้า Dashboard หลัก
+        // Go back to main dashboard
         function goToDashboard() {
-            if(document.getElementById('academic-module-view')) document.getElementById('academic-module-view').style.display = 'none';
-            if(document.getElementById('personnel-module-view')) document.getElementById('personnel-module-view').style.display = 'none';
-            if(document.getElementById('general-module-view')) document.getElementById('general-module-view').style.display = 'none';
-            if(document.getElementById('student-affairs-module-view')) document.getElementById('student-affairs-module-view').style.display = 'none';
-            if(document.getElementById('budget-module-view')) document.getElementById('budget-module-view').style.display = 'none';
+            ['academic', 'personnel', 'general', 'student-affairs', 'budget'].forEach(m => {
+                let el = document.getElementById(m + '-module-view');
+                if(el) el.style.display = 'none';
+            });
             document.getElementById('main-dashboard-view').style.display = 'block';
         }
 
-        // ==========================================
-        // UI & Chart Initialization
-        // ==========================================
-        
         // Sidebar Toggle
         document.getElementById('sidebarCollapse').addEventListener('click', function () {
             document.getElementById('sidebar').classList.toggle('active');
             document.getElementById('content').classList.toggle('active');
         });
 
-        // Charts
+        // Init Charts
         Chart.defaults.font.family = "'Prompt', sans-serif";
         Chart.defaults.color = "#6c757d";
 
@@ -1115,17 +1052,10 @@
             type: 'bar',
             data: {
                 labels: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์'],
-                datasets: [{
-                    label: 'นักเรียนมาเรียน (คน)',
-                    data: [2450, 2480, 2465, 2420, 2490],
-                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
-                    borderRadius: 5,
-                }, {
-                    label: 'ขาด/ลา (คน)',
-                    data: [50, 20, 35, 80, 10],
-                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                    borderRadius: 5,
-                }]
+                datasets: [
+                    { label: 'นักเรียนมาเรียน (คน)', data: [2450, 2480, 2465, 2420, 2490], backgroundColor: 'rgba(13, 110, 253, 0.8)', borderRadius: 5 },
+                    { label: 'ขาด/ลา (คน)', data: [50, 20, 35, 80, 10], backgroundColor: 'rgba(220, 53, 69, 0.8)', borderRadius: 5 }
+                ]
             },
             options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
         });
@@ -1138,56 +1068,11 @@
                 datasets: [{
                     data: [65, 15, 20],
                     backgroundColor: ['#0d6efd', '#ffc107', '#198754'],
-                    borderWidth: 0,
-                    hoverOffset: 4
+                    borderWidth: 0, hoverOffset: 4
                 }]
             },
             options: { responsive: true, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
         });
-
-        /*
-        ================================================================================
-        คำแนะนำ: โค้ดสำหรับนำไปใส่ใน Google Apps Script (Extensions > Apps Script ใน Google Sheets)
-        เพื่อสร้าง API ระบบ Login ด้วย Google Sheets
-
-        1. สร้าง Google Sheet มีคอลัมน์ A=Username, B=Password, C=Role, D=Name
-        2. ไปที่เมนู ส่วนขยาย (Extensions) > Apps Script
-        3. คัดลอกโค้ดด้านล่างนี้ไปวาง
-
-        function doPost(e) {
-          // ดึงข้อมูลชีตที่ใช้งาน (เปลี่ยนชื่อ "Users" ตามชื่อ Sheet ของคุณ)
-          var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Users");
-          var data = JSON.parse(e.postData.contents);
-          
-          var username = data.username;
-          var password = data.password;
-
-          var values = sheet.getDataRange().getValues();
-          
-          // วนลูปเช็คข้อมูล (เริ่มจากแถว 1 เพื่อข้าม Header แถวที่ 0)
-          for (var i = 1; i < values.length; i++) {
-            if (values[i][0] == username && values[i][1] == password) {
-              return ContentService.createTextOutput(JSON.stringify({
-                success: true,
-                role: values[i][2], // คอลัมน์ C เช่น admin หรือ user
-                name: values[i][3]  // คอลัมน์ D เช่น ชื่อ-สกุล
-              })).setMimeType(ContentService.MimeType.JSON);
-            }
-          }
-
-          // กรณีไม่พบผู้ใช้งานหรือรหัสผ่านผิด
-          return ContentService.createTextOutput(JSON.stringify({
-            success: false,
-            message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
-          })).setMimeType(ContentService.MimeType.JSON);
-        }
-
-        4. กด การทำให้ใช้งานได้ (Deploy) > การทำให้ใช้งานได้รายการใหม่ (New deployment)
-        5. เลือกประเภท: เว็บแอป (Web App)
-        6. สิทธิ์การเข้าถึง (Who has access): ทุกคน (Anyone)
-        7. คัดลอก URL ของเว็บแอปที่ได้ มาใส่ในตัวแปร `GOOGLE_SHEET_GAS_URL` ในโค้ด HTML ของคุณ
-        ================================================================================
-        */
     </script>
 </body>
 </html>
