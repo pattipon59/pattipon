@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบส่งรายงานการเลื่อนเงินเดือน โรงเรียนขัวเรียงศึกษา</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-green: #198754;
+            --secondary-green: #20c997;
+            --light-green: #eafaf1;
+            --dark-green: #146c43;
+            --bg-color: #f4fcf8;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+        }
+
+        /* Navbar Styling */
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+            box-shadow: 0 4px 15px rgba(25, 135, 84, 0.2);
+        }
+        .navbar-brand {
+            font-weight: 600;
+            color: white !important;
+            font-size: 1.4rem;
+        }
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-radius: 8px;
+            padding: 8px 16px !important;
+            margin: 0 4px;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255,255,255,0.2);
+            color: white !important;
+        }
+
+        /* Card Styling */
+        .card-custom {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(25, 135, 84, 0.08);
+            background-color: white;
+            overflow: hidden;
+        }
+        .card-header-custom {
+            background-color: var(--light-green);
+            color: var(--dark-green);
+            border-bottom: 2px solid #d1e7dd;
+            padding: 20px;
+            font-weight: 600;
+            font-size: 1.25rem;
+        }
+
+        /* Form Controls */
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid #ced4da;
+            padding: 12px 15px;
+            transition: all 0.3s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-green);
+            box-shadow: 0 0 0 0.25rem rgba(32, 201, 151, 0.25);
+        }
+        
+        /* Buttons */
+        .btn-success-custom {
+            background: linear-gradient(135deg, var(--primary-green), var(--secondary-green));
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+        }
+
+        /* Table Styling */
+        .table-custom {
+            vertical-align: middle;
+        }
+        .table-custom thead th {
+            background-color: var(--light-green);
+            color: var(--dark-green);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-green);
+            padding: 15px;
+        }
+        .table-custom tbody td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .table-custom tbody tr:hover {
+            background-color: #f8fff9;
+        }
+        
+        .drive-link {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background-color: var(--light-green);
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .drive-link:hover {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        .empty-state {
+            padding: 50px 20px;
+            text-align: center;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            color: #dee2e6;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fa-solid fa-graduation-cap me-2"></i> โรงเรียนขัวเรียงศึกษา
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="nav-form" onclick="switchView('form')">
+                            <i class="fa-solid fa-paper-plane me-1"></i> ส่งรายงาน
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="nav-report" onclick="switchView('report')">
+                            <i class="fa-solid fa-list-check me-1"></i> ผลการส่งรายงาน
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        
+        <!-- View 1: Form Section -->
+        <div id="view-form">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="text-center mb-4">
+                        <h2 class="text-success" style="font-weight: 700;">ส่งรายงานการเลื่อนเงินเดือน</h2>
+                        <p class="text-muted">ครั้งที่ 1/2569 (1 เมษายน 2569) โรงเรียนขัวเรียงศึกษา</p>
+                    </div>
+
+                    <div class="card card-custom">
+                        <div class="card-header-custom">
+                            <i class="fa-solid fa-user-pen me-2"></i> กรอกข้อมูลบุคลากร
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="salaryReportForm">
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label">คำนำหน้า</label>
+                                        <select class="form-select" id="prefix" required>
+                                            <option value="" selected disabled>เลือก...</option>
+                                            <option value="นาย">นาย</option>
+                                            <option value="นาง">นาง</option>
+                                            <option value="นางสาว">นางสาว</option>
+                                            <option value="ว่าที่ ร.ต.">ว่าที่ ร.ต.</option>
+                                            <option value="ว่าที่ ร.ต.หญิง">ว่าที่ ร.ต.หญิง</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">ชื่อ</label>
+                                        <input type="text" class="form-control" id="firstName" placeholder="ระบุชื่อ" required>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label">นามสกุล</label>
+                                        <input type="text" class="form-control" id="lastName" placeholder="ระบุนามสกุล" required>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">กลุ่มสาระการเรียนรู้</label>
+                                        <select class="form-select" id="department" required>
+                                            <option value="" selected disabled>เลือกกลุ่มสาระฯ...</option>
+                                            <option value="วิทยาศาสตร์และเทคโนโลยี">วิทยาศาสตร์และเทคโนโลยี</option>
+                                            <option value="คณิตศาสตร์">คณิตศาสตร์</option>
+                                            <option value="ภาษาไทย">ภาษาไทย</option>
+                                            <option value="ภาษาต่างประเทศ">ภาษาต่างประเทศ</option>
+                                            <option value="สังคมศึกษา ศาสนาฯ">สังคมศึกษา ศาสนาฯ</option>
+                                            <option value="ศิลปะ">ศิลปะ</option>
+                                            <option value="การงานอาชีพ">การงานอาชีพ</option>
+                                            <option value="สุขศึกษาและพลศึกษา">สุขศึกษาและพลศึกษา</option>
+                                            <option value="ปฐมวัย">ปฐมวัย</option>
+                                            <option value="กิจกรรมพัฒนาผู้เรียน">กิจกรรมพัฒนาผู้เรียน</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">ตำแหน่ง</label>
+                                        <select class="form-select" id="position" required>
+                                            <option value="" selected disabled>เลือกตำแหน่ง...</option>
+                                            <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
+                                            <option value="รองผู้อำนวยการสถานศึกษา">รองผู้อำนวยการสถานศึกษา</option>
+                                            <option value="ครู">ครู</option>
+                                            <option value="ครูผู้ช่วย">ครูผู้ช่วย</option>
+                                            <option value="พนักงานราชการ">พนักงานราชการ</option>
+                                            <option value="ครูอัตราจ้าง">ครูอัตราจ้าง</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">วิทยฐานะ</label>
+                                    <select class="form-select" id="academicLevel" required>
+                                        <option value="" selected disabled>เลือกวิทยฐานะ...</option>
+                                        <option value="ไม่มีวิทยฐานะ">ไม่มีวิทยฐานะ</option>
+                                        <option value="ชำนาญการ">ชำนาญการ</option>
+                                        <option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option>
+                                        <option value="เชี่ยวชาญ">เชี่ยวชาญ</option>
+                                        <option value="เชี่ยวชาญพิเศษ">เชี่ยวชาญพิเศษ</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">ลิงก์เอกสาร Google Drive</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light text-success"><i class="fa-brands fa-google-drive"></i></span>
+                                        <input type="url" class="form-control" id="driveLink" placeholder="https://drive.google.com/..." required>
+                                    </div>
+                                    <div class="form-text text-muted">* กรุณาเปิดสิทธิ์การเข้าถึงไฟล์ให้เป็น "ทุกคนที่มีลิงก์" (Anyone with the link) ก่อนนำมาวาง</div>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-success-custom btn-lg text-white">
+                                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> บันทึกข้อมูลและส่งรายงาน
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Report Table Section -->
+        <div id="view-report" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="text-success mb-0" style="font-weight: 700;">
+                    <i class="fa-solid fa-chart-bar me-2"></i> ผลการส่งรายงาน
+                </h2>
+                <span class="badge bg-success rounded-pill px-3 py-2 fs-6" id="totalCount">จำนวน 0 คน</span>
+            </div>
+
+            <div class="card card-custom">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0" id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th width="5%" class="text-center">ลำดับ</th>
+                                    <th width="20%">ชื่อ-นามสกุล</th>
+                                    <th width="15%">กลุ่มสาระการเรียนรู้</th>
+                                    <th width="15%">ตำแหน่ง</th>
+                                    <th width="15%">วิทยฐานะ</th>
+                                    <th width="15%" class="text-center">วัน-เวลาที่ส่ง</th>
+                                    <th width="15%" class="text-center">เอกสารอ้างอิง</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Data will be rendered here by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="emptyState" class="empty-state" style="display: none;">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <h4>ยังไม่มีข้อมูลการส่งรายงาน</h4>
+                        <p>รายชื่อผู้ส่งรายงานจะปรากฏที่นี่เมื่อมีการบันทึกข้อมูล</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="successToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" style="font-size: 1.1rem; font-weight: 500;">
+                    <i class="fa-solid fa-circle-check me-2"></i> บันทึกข้อมูลส่งรายงานสำเร็จ!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application Logic -->
+    <script>
+        // === 1. นำ URL ของ Web App จาก Google Apps Script มาใส่ตรงนี้ ===
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvth9HvHlRj_xjGj-cEvBP2WeBk6osxYiAJ7Y_AfwJJS6gwkl_XmUeqZ4zOMvveN8/exec';
+
+        // Handle View Switching
+        function switchView(viewName) {
+            const formView = document.getElementById('view-form');
+            const reportView = document.getElementById('view-report');
+            const navForm = document.getElementById('nav-form');
+            const navReport = document.getElementById('nav-report');
+
+            if (viewName === 'form') {
+                formView.style.display = 'block';
+                reportView.style.display = 'none';
+                navForm.classList.add('active');
+                navReport.classList.remove('active');
+            } else {
+                formView.style.display = 'none';
+                reportView.style.display = 'block';
+                navForm.classList.remove('active');
+                navReport.classList.add('active');
+                renderTable(); // ดึงข้อมูลทุกครั้งที่สลับมาหน้ารายงาน
+            }
+        }
+
+        // Handle Form Submission
+        document.getElementById('salaryReportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            // เปลี่ยนปุ่มเป็นสถานะกำลังโหลด (Loading)
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> กำลังบันทึกข้อมูล...';
+            submitBtn.disabled = true;
+
+            // Get Form Values
+            const data = {
+                prefix: document.getElementById('prefix').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                department: document.getElementById('department').value,
+                position: document.getElementById('position').value,
+                academicLevel: document.getElementById('academicLevel').value,
+                driveLink: document.getElementById('driveLink').value
+            };
+
+            // 2. ส่งข้อมูลไปยัง Google Sheets ผ่าน API (ใช้ fetch แทน google.script.run)
+            fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    // Show Toast Success
+                    const toastEl = document.getElementById('successToast');
+                    const toast = new bootstrap.Toast(toastEl);
+                    toast.show();
+
+                    // Reset form and button
+                    document.getElementById('salaryReportForm').reset();
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+
+                    // สลับไปหน้าตารางอัตโนมัติ
+                    setTimeout(() => {
+                        switchView('report');
+                    }, 1500);
+                } else {
+                    throw new Error(result.message || 'เซิร์ฟเวอร์ตอบกลับผิดพลาด');
+                }
+            })
+            .catch(error => {
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + error.message);
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            });
+        });
+
+        // Render Data Table
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const table = document.getElementById('reportTable');
+            const totalCount = document.getElementById('totalCount');
+            
+            // แสดงสถานะกำลังโหลด
+            table.style.display = 'table';
+            emptyState.style.display = 'none';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><i class="fa-solid fa-spinner fa-spin fa-3x text-success mb-3"></i><h5 class="text-muted">กำลังดึงข้อมูลจาก Google Sheets...</h5></td></tr>';
+            
+            // 3. ดึงข้อมูลจาก Google Sheets ผ่าน API (ใช้ fetch แทน google.script.run)
+            fetch(APPS_SCRIPT_URL)
+            .then(response => response.json())
+            .then(reports => {
+                totalCount.textContent = `จำนวน ${reports.length} คน`;
+
+                if (reports.length === 0) {
+                    table.style.display = 'none';
+                        emptyState.style.display = 'block';
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+
+                    // นำข้อมูลมาวนลูปแสดงผล (เรียงจากล่าสุดไปเก่าสุด)
+                    reports.slice().reverse().forEach((report, index) => {
+                        const orderNum = reports.length - index;
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="text-center">${orderNum}</td>
+                            <td><span class="fw-medium">${report.prefix}${report.firstName} ${report.lastName}</span></td>
+                            <td>${report.department}</td>
+                            <td>${report.position}</td>
+                            <td>${report.academicLevel}</td>
+                            <td class="text-center text-muted small">${report.timestamp}</td>
+                            <td class="text-center">
+                                <a href="${report.driveLink}" target="_blank" class="drive-link" title="เปิดเอกสาร">
+                                    <i class="fa-brands fa-google-drive"></i> เปิดอ่าน
+                                </a>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+            })
+            .catch(error => {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger py-4"><i class="fa-solid fa-circle-exclamation fs-1 mb-2"></i><br>เกิดข้อผิดพลาดในการโหลดข้อมูล: ${error.message}</td></tr>`;
+            });
+        }
+    </script>
+</body>
+</html>
