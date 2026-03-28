@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเช็คชื่อหน้าเสาธง - โรงเรียนขัวเรียงศึกษา</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-green: #198754;
+            --dark-green: #146c43;
+            --light-green: #d1e7dd;
+            --bg-color: #f4f9f5;
+        }
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .card-header-custom {
+            background-color: #fff;
+            border-bottom: 2px solid var(--light-green);
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: var(--dark-green);
+        }
+        .nav-pills .nav-link {
+            color: var(--dark-green);
+            border-radius: 50px;
+            padding: 8px 20px;
+            margin: 0 5px;
+            font-weight: 500;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-green);
+            color: white;
+            box-shadow: 0 2px 5px rgba(25, 135, 84, 0.4);
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table thead th {
+            background-color: var(--light-green);
+            color: var(--dark-green);
+            font-weight: 600;
+            border-bottom: none;
+            white-space: nowrap;
+        }
+        .table tbody td {
+            vertical-align: middle;
+        }
+        /* Style for Radio Buttons as Badges */
+        .status-group .btn {
+            border-radius: 50px;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            margin: 2px;
+        }
+        .btn-submit {
+            background-color: var(--primary-green);
+            color: white;
+            border-radius: 50px;
+            padding: 10px 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(25, 135, 84, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-submit:hover {
+            background-color: var(--dark-green);
+            transform: translateY(-2px);
+            color: white;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner-border {
+            color: var(--primary-green);
+            width: 3rem; height: 3rem;
+        }
+        /* --- Login Styles --- */
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-color), var(--light-green));
+            position: relative;
+            z-index: 1000;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 15px 35px rgba(20, 108, 67, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border" role="status"></div>
+        <h5 class="mt-3 text-success">กำลังประมวลผล...</h5>
+    </div>
+
+    <!-- Message Modal -->
+    <div class="modal fade" id="msgModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-body text-center p-4">
+                    <div id="msgIcon" class="display-1 mb-3"></div>
+                    <h4 id="msgTitle" class="mb-3">Title</h4>
+                    <p id="msgText" class="text-muted">Message</p>
+                    <button type="button" class="btn btn-success rounded-pill px-4" data-bs-dismiss="modal">ตกลง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="login-wrapper">
+        <div class="login-card text-center">
+            <i class="bi bi-shield-lock-fill text-success display-1 mb-3"></i>
+            <h3 class="mb-2 text-success" style="font-weight: 600;">เข้าสู่ระบบ</h3>
+            <p class="text-muted mb-4 small">ระบบเช็คชื่อหน้าเสาธง โรงเรียนขัวเรียงศึกษา</p>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3 text-start">
+                    <label class="form-label text-muted small">ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" class="form-control" id="username" required placeholder="กรอกชื่อผู้ใช้">
+                </div>
+                <div class="mb-4 text-start">
+                    <label class="form-label text-muted small">รหัสผ่าน (Password)</label>
+                    <input type="password" class="form-control" id="password" required placeholder="กรอกรหัสผ่าน">
+                </div>
+                <button type="submit" class="btn btn-submit w-100">เข้าสู่ระบบ</button>
+                
+                <div class="mt-3 text-muted small text-start p-2 bg-light rounded border">
+                    <p class="mb-1 fw-bold">บัญชีทดสอบ (กรณีไม่ต่อฐานข้อมูล):</p>
+                    <ul class="mb-0 ps-3">
+                        <li>ผู้ดูแล: <code>admin</code> / <code>1234</code></li>
+                        <li>ครู (ม.1/1): <code>t101</code> / <code>1234</code></li>
+                        <li>ครู (ม.1/2): <code>t102</code> / <code>1234</code></li>
+                        <li>นักเรียน (ด.ช.สมชาย): <code>s1001</code> / <code>1234</code></li>
+                        <li>ผู้ปกครอง (ด.ช.สมชาย): <code>p1001</code> / <code>1234</code></li>
+                    </ul>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Section (Initially Hidden) -->
+    <div id="mainAppSection" style="display: none;">
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark navbar-custom py-2">
+            <div class="container d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex flex-column my-1">
+                    <h5 class="text-white mb-0"><i class="bi bi-flag-fill text-warning me-2"></i>ระบบเช็คชื่อหน้าเสาธง</h5>
+                    <div class="text-light d-none d-md-block" style="font-size: 0.8rem; opacity: 0.9;">
+                        โรงเรียนขัวเรียงศึกษา
+                    </div>
+                </div>
+                
+                <!-- User Profile Dropdown -->
+                <div class="dropdown my-1">
+                    <button class="btn btn-light btn-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-green); font-weight: 500;">
+                        <i class="bi bi-person-circle me-1"></i> <span id="displayUserName">ผู้ใช้งาน</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                        <li><span class="dropdown-item-text text-muted small" id="displayUserRole">Role</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="container my-4">
+            
+            <!-- Tab Navigation -->
+            <ul class="nav nav-pills justify-content-center mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="checkin-tab" data-bs-toggle="pill" data-bs-target="#checkin" type="button" role="tab"><i class="bi bi-person-check-fill me-1"></i> เช็คชื่อ</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="report-tab" data-bs-toggle="pill" data-bs-target="#report" type="button" role="tab"><i class="bi bi-file-earmark-bar-graph-fill me-1"></i> รายงานข้อมูล</button>
+                </li>
+                <!-- เพิ่มแท็บสำหรับผู้ปกครองตั้งค่า LINE -->
+                <li class="nav-item" role="presentation" id="settings-tab-container" style="display: none;">
+                    <button class="nav-link text-success" id="settings-tab" data-bs-toggle="pill" data-bs-target="#settings" type="button" role="tab"><i class="bi bi-gear-fill me-1"></i> ตั้งค่าการแจ้งเตือน</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="mainTabsContent">
+                
+                <!-- CHECK-IN TAB -->
+                <div class="tab-pane fade show active" id="checkin" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap">
+                            <span class="mb-2 mb-md-0"><i class="bi bi-card-checklist me-2"></i>บันทึกการเข้าร่วมกิจกรรม</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Selectors -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">วันที่เช็คชื่อ</label>
+                                    <input type="date" class="form-control" id="checkDate">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">ระดับชั้น / ห้อง</label>
+                                    <select class="form-select" id="classSelect">
+                                        <option value="">-- กรุณาเลือกห้องเรียน --</option>
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Student List Table -->
+                            <div class="table-responsive" id="studentTableContainer" style="display:none;">
+                                <table class="table table-hover align-middle" id="studentTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="10%" class="text-center">เลขที่/รหัส</th>
+                                            <th width="30%">ชื่อ - นามสกุล</th>
+                                            <th width="60%" class="text-center">สถานะการเข้าร่วม</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentListBody">
+                                        <!-- Students will be injected here -->
+                                    </tbody>
+                                </table>
+                                <div class="text-center mt-4">
+                                    <!-- สวิตช์เปิด-ปิด LINE Notify -->
+                                    <div class="form-check form-switch d-inline-block text-start mb-3 me-3 align-middle">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="sendLineNotify" checked style="cursor: pointer;">
+                                        <label class="form-check-label text-muted" for="sendLineNotify" style="cursor: pointer;"><i class="bi bi-line text-success"></i> แจ้งเตือนผู้ปกครองผ่าน LINE</label>
+                                    </div>
+                                    
+                                    <button class="btn btn-submit" onclick="submitAttendance()">
+                                        <i class="bi bi-cloud-arrow-up-fill me-2"></i>บันทึกข้อมูลลงระบบ
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="noClassSelectedMsg" class="text-center py-5 text-muted">
+                                <i class="bi bi-search display-1 text-light"></i>
+                                <p class="mt-3">กรุณาเลือกห้องเรียนเพื่อแสดงรายชื่อนักเรียน</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REPORT TAB -->
+                <div class="tab-pane fade" id="report" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-funnel-fill me-2"></i>ตัวกรองข้อมูล
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">ตั้งแต่วันที่</label>
+                                    <input type="date" class="form-control" id="filterStartDate">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">ถึงวันที่</label>
+                                    <input type="date" class="form-control" id="filterEndDate">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">ระดับชั้น</label>
+                                    <select class="form-select" id="filterClass">
+                                        <option value="">ทั้งหมด</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">สถานะ</label>
+                                    <select class="form-select" id="filterStatus">
+                                        <option value="">ทั้งหมด</option>
+                                        <option value="มา">มา</option>
+                                        <option value="ลา">ลา</option>
+                                        <option value="ขาด">ขาด</option>
+                                        <option value="สาย">สาย</option>
+                                    </select>
+                                </div>
+                                <div class="col-12 text-end">
+                                    <button class="btn btn-outline-secondary rounded-pill px-4 me-2" onclick="resetFilters()">ล้างค่า</button>
+                                    <button class="btn btn-success rounded-pill px-4" onclick="applyFilter()"><i class="bi bi-search me-1"></i> ค้นหา</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>วันที่</th>
+                                            <th>รหัส/เลขที่</th>
+                                            <th>ชื่อ - นามสกุล</th>
+                                            <th>ชั้น</th>
+                                            <th class="text-center">สถานะ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportTableBody">
+                                        <!-- Report Data -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noReportDataMsg" class="text-center py-4 text-muted" style="display: none;">
+                                ไม่พบข้อมูลตามเงื่อนไขที่ค้นหา
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS TAB (สำหรับผู้ปกครอง) -->
+                <div class="tab-pane fade" id="settings" role="tabpanel">
+                    <div class="card border-success border-opacity-50">
+                        <div class="card-header-custom bg-success bg-opacity-10 text-success border-bottom-0 rounded-top" style="border-radius: 15px 15px 0 0;">
+                            <i class="bi bi-line me-2"></i>ตั้งค่ารับการแจ้งเตือนผ่าน LINE
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-info rounded-3 mb-4" role="alert">
+                                <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle-fill me-2"></i>วิธีรับค่า Token สำหรับการแจ้งเตือน</h6>
+                                <ol class="mb-0 ps-3 small text-muted">
+                                    <li>ไปที่เว็บไซต์ <a href="https://notify-bot.line.me/" target="_blank" class="fw-bold">LINE Notify</a> และเข้าสู่ระบบด้วยบัญชี LINE ของท่าน</li>
+                                    <li>คลิกที่ชื่อของท่านมุมขวาบน เลือก <strong>"หน้าของฉัน (My page)"</strong></li>
+                                    <li>เลื่อนลงล่างสุด คลิกปุ่ม <strong>"ออก Token (Generate token)"</strong></li>
+                                    <li>ตั้งชื่อการแจ้งเตือน (เช่น "ระบบเช็คชื่อลูก") และเลือกแชทที่ต้องการรับข้อความ (เลือก <strong>รับการแจ้งเตือนแบบตัวต่อตัวจาก LINE Notify</strong>)</li>
+                                    <li>คลิก <strong>"ออก Token"</strong> และคัดลอกรหัสที่ได้มาวางในช่องด้านล่างนี้</li>
+                                </ol>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lineTokenInput" class="form-label fw-bold text-muted">LINE Notify Token ของท่าน</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-key-fill text-muted"></i></span>
+                                    <input type="text" class="form-control" id="lineTokenInput" placeholder="วาง Token ที่คัดลอกมาที่นี่...">
+                                    <button class="btn btn-success px-4" type="button" onclick="submitParentToken()">บันทึก Token</button>
+                                </div>
+                                <div class="form-text mt-2"><i class="bi bi-shield-check text-success me-1"></i>ระบบจะส่งแจ้งเตือนการเข้าแถวของบุตรหลานไปยัง LINE ของท่านอัตโนมัติ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div> <!-- End Main App Section -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application Logic -->
+    <script>
+        // ==========================================
+        // ตั้งค่า URL ของ Google Apps Script Web App ของคุณที่นี่
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkEge68-BPDhkWJkgCvabd40TMEP9zhrZ4B32jZT2gq6SdzMezc5R3O73M9NO9qnk/exec"; 
+        
+        // ==========================================
+        // ข้อมูลจำลอง (Mock Data) ใช้ในกรณีที่ยังไม่ได้เชื่อมต่อ Google Sheet
+        // ==========================================
+        let mockStudents = [
+            { id: "1001", name: "เด็กชายสมชาย ใจดี", class: "ม.1/1" },
+            { id: "1002", name: "เด็กหญิงสมหญิง รักเรียน", class: "ม.1/1" },
+            { id: "1003", name: "เด็กชายมีชัย ใฝ่รู้", class: "ม.1/1" },
+            { id: "1004", name: "เด็กหญิงวันดี สีสวย", class: "ม.1/2" },
+            { id: "1005", name: "เด็กชายกล้าหาญ ชาญชัย", class: "ม.1/2" },
+            { id: "2001", name: "นายขยัน หมั่นเพียร", class: "ม.4/1" },
+            { id: "2002", name: "นางสาวฟ้าใส ใจงาม", class: "ม.4/1" }
+        ];
+
+        let mockRecords = [
+            { date: "2023-10-24", class: "ม.1/1", studentId: "1001", studentName: "เด็กชายสมชาย ใจดี", status: "มา" },
+            { date: "2023-10-24", class: "ม.1/1", studentId: "1002", studentName: "เด็กหญิงสมหญิง รักเรียน", status: "สาย" },
+        ];
+
+        let currentStudentsList = [];
+        let currentUser = null;
+
+        // ==========================================
+        // ระบบจำลองข้อมูลผู้ใช้งาน (Mock Users)
+        // ==========================================
+        const MOCK_USERS = [
+            { username: "admin", password: "1234", role: "admin", name: "แอดมิน ระบบ", displayRole: "ผู้ดูแลระบบ" },
+            { username: "director", password: "1234", role: "ผู้บริหาร", name: "ผอ.ใจดี รักเรียน", displayRole: "ผู้บริหาร" },
+            { username: "t101", password: "1234", role: "ครูที่ปรึกษา", name: "ครูสมหญิง (ม.1/1)", displayRole: "ครูที่ปรึกษา", assignedClass: "ม.1/1" },
+            { username: "t102", password: "1234", role: "ครูที่ปรึกษา", name: "ครูสมเกียรติ (ม.1/2)", displayRole: "ครูที่ปรึกษา", assignedClass: "ม.1/2" },
+            { username: "s1001", password: "1234", role: "นักเรียน", name: "ด.ช.สมชาย ใจดี", displayRole: "นักเรียน", studentId: "1001" },
+            { username: "s1002", password: "1234", role: "นักเรียน", name: "ด.ญ.สมหญิง รักเรียน", displayRole: "นักเรียน", studentId: "1002" },
+            { username: "p1001", password: "1234", role: "ผู้ปกครอง", name: "ผปค. ด.ช.สมชาย", displayRole: "ผู้ปกครอง", childId: "1001" }
+        ];
+
+        // Elements
+        const classSelect = document.getElementById('classSelect');
+        const filterClass = document.getElementById('filterClass');
+        const studentTableContainer = document.getElementById('studentTableContainer');
+        const noClassSelectedMsg = document.getElementById('noClassSelectedMsg');
+        const studentListBody = document.getElementById('studentListBody');
+        const checkDate = document.getElementById('checkDate');
+        const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            checkDate.value = today;
+            document.getElementById('filterStartDate').value = today;
+            document.getElementById('filterEndDate').value = today;
+        });
+
+        // ==========================================
+        // Authentication Logic
+        // ==========================================
+        async function handleLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('username').value;
+            const passVal = document.getElementById('password').value;
+
+            if(!userVal || !passVal) return;
+            
+            showLoading();
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'login', username: userVal, password: passVal })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.status === 'success') {
+                        currentUser = result.user;
+                        completeLoginProcess();
+                    } else {
+                        hideLoading();
+                        showMessage('error', 'เข้าสู่ระบบล้มเหลว', result.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                    }
+                } catch (err) {
+                    hideLoading();
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                }
+            } else {
+                setTimeout(() => {
+                    const user = MOCK_USERS.find(u => u.username === userVal && u.password === passVal);
+                    if (user) {
+                        currentUser = user;
+                        completeLoginProcess();
+                    } else {
+                        hideLoading();
+                        showMessage('error', 'เข้าสู่ระบบล้มเหลว', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                    }
+                }, 800);
+            }
+        }
+
+        function completeLoginProcess() {
+            document.getElementById('displayUserName').innerText = currentUser.name;
+            document.getElementById('displayUserRole').innerText = `สิทธิ์: ${currentUser.displayRole}`;
+            
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainAppSection').style.display = 'block';
+
+            applyRolePermissions();
+            initializeDataAfterLogin();
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('mainAppSection').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            
+            classSelect.disabled = false;
+            filterClass.disabled = false;
+            
+            document.getElementById('studentListBody').innerHTML = '';
+            document.getElementById('reportTableBody').innerHTML = '';
+            document.getElementById('studentTableContainer').style.display = 'none';
+            document.getElementById('noClassSelectedMsg').style.display = 'block';
+        }
+
+        function applyRolePermissions() {
+            const checkinTabItem = document.getElementById('checkin-tab').parentElement;
+            const settingsTabItem = document.getElementById('settings-tab-container');
+            
+            if (currentUser.role === 'admin' || currentUser.role === 'ครูที่ปรึกษา') {
+                checkinTabItem.style.display = 'block';
+                const tab = new bootstrap.Tab(document.getElementById('checkin-tab'));
+                tab.show();
+                
+                settingsTabItem.style.display = 'none';
+                
+                if(currentUser.role === 'ครูที่ปรึกษา' && currentUser.assignedClass) {
+                    classSelect.value = currentUser.assignedClass;
+                    classSelect.disabled = true; 
+                    
+                    filterClass.value = currentUser.assignedClass;
+                    filterClass.disabled = true; 
+                } else {
+                    classSelect.value = "";
+                    classSelect.disabled = false;
+                    filterClass.value = "";
+                    filterClass.disabled = false;
+                }
+            } else {
+                checkinTabItem.style.display = 'none';
+                const tab = new bootstrap.Tab(document.getElementById('report-tab'));
+                tab.show();
+
+                if (currentUser.role === 'ผู้ปกครอง') {
+                    settingsTabItem.style.display = 'block';
+                } else {
+                    settingsTabItem.style.display = 'none';
+                }
+            }
+
+            const filterClassContainer = document.getElementById('filterClass').parentElement;
+            if (currentUser.role === 'นักเรียน' || currentUser.role === 'ผู้ปกครอง') {
+                filterClassContainer.style.display = 'none'; 
+            } else {
+                filterClassContainer.style.display = 'block';
+            }
+        }
+
+        async function initializeDataAfterLogin() {
+            showLoading();
+            await loadStudentData();
+            hideLoading();
+            
+            if(classSelect.value !== "") {
+                classSelect.dispatchEvent(new Event('change'));
+            }
+            applyFilter();
+        }
+
+        // ==========================================
+        // Data Handling
+        // ==========================================
+        function showMessage(type, title, text) {
+            const icon = document.getElementById('msgIcon');
+            if(type === 'success') {
+                icon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+            } else if (type === 'error') {
+                icon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+            } else {
+                icon.innerHTML = '<i class="bi bi-exclamation-circle-fill text-warning"></i>';
+            }
+            document.getElementById('msgTitle').innerText = title;
+            document.getElementById('msgText').innerText = text;
+            msgModal.show();
+        }
+
+        function showLoading() { document.getElementById('loadingOverlay').style.display = 'flex'; }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+        async function loadStudentData() {
+            let dataToUse = mockStudents;
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL + "?action=getStudents");
+                    const data = await response.json();
+                    if(data && data.length > 0) dataToUse = data;
+                } catch (e) {
+                    console.error("Failed to fetch from script, using mock data.", e);
+                }
+            }
+
+            currentStudentsList = dataToUse;
+            
+            const classes = [...new Set(dataToUse.map(s => s.class))].sort();
+            
+            classSelect.innerHTML = '<option value="">-- กรุณาเลือกห้องเรียน --</option>';
+            filterClass.innerHTML = '<option value="">ทั้งหมด</option>';
+            
+            classes.forEach(c => {
+                classSelect.add(new Option(c, c));
+                filterClass.add(new Option(c, c));
+            });
+        }
+
+        classSelect.addEventListener('change', (e) => {
+            const selectedClass = e.target.value;
+            if (selectedClass) {
+                renderStudentTable(selectedClass);
+                studentTableContainer.style.display = 'block';
+                noClassSelectedMsg.style.display = 'none';
+            } else {
+                studentTableContainer.style.display = 'none';
+                noClassSelectedMsg.style.display = 'block';
+            }
+        });
+
+        function renderStudentTable(className) {
+            studentListBody.innerHTML = '';
+            const filteredStudents = currentStudentsList.filter(s => s.class === className);
+            
+            filteredStudents.forEach((student) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center text-muted">${student.id}</td>
+                    <td class="fw-bold">${student.name}</td>
+                    <td class="text-center">
+                        <div class="status-group" role="group">
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="ma_${student.id}" value="มา" autocomplete="off">
+                            <label class="btn btn-outline-success" for="ma_${student.id}"><i class="bi bi-check-lg"></i> มา</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="la_${student.id}" value="ลา" autocomplete="off">
+                            <label class="btn btn-outline-warning" for="la_${student.id}">ลา</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="khad_${student.id}" value="ขาด" autocomplete="off">
+                            <label class="btn btn-outline-danger" for="khad_${student.id}"><i class="bi bi-x-lg"></i> ขาด</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="sai_${student.id}" value="สาย" autocomplete="off">
+                            <label class="btn btn-outline-info" for="sai_${student.id}">สาย</label>
+                        </div>
+                    </td>
+                `;
+                studentListBody.appendChild(tr);
+            });
+        }
+
+        async function submitAttendance() {
+            const dateVal = checkDate.value;
+            const classVal = classSelect.value;
+            
+            if(!dateVal || !classVal) {
+                showMessage('warning', 'ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกวันที่และห้องเรียน');
+                return;
+            }
+
+            const filteredStudents = currentStudentsList.filter(s => s.class === classVal);
+            let recordsToSave = [];
+            let missingCount = 0;
+
+            filteredStudents.forEach(student => {
+                const checkedRadio = document.querySelector(`input[name="status_${student.id}"]:checked`);
+                if (checkedRadio) {
+                    recordsToSave.push({
+                        date: dateVal,
+                        className: classVal,
+                        studentId: student.id,
+                        studentName: student.name,
+                        status: checkedRadio.value
+                    });
+                } else {
+                    missingCount++;
+                }
+            });
+
+            if (missingCount > 0) {
+                showMessage('warning', 'ตรวจสอบข้อมูล', `มีนักเรียนที่ยังไม่ได้เช็คชื่อจำนวน ${missingCount} คน`);
+                return;
+            }
+
+            const isSendLine = document.getElementById('sendLineNotify').checked;
+            showLoading();
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'submitAttendance', 
+                            data: recordsToSave,
+                            sendLine: isSendLine 
+                        })
+                    });
+                    const result = await response.json();
+                    
+                    if(result.status === 'success') {
+                        finishSubmit(recordsToSave);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลลง Google Sheet ได้');
+                }
+            } else {
+                setTimeout(() => {
+                    mockRecords = mockRecords.concat(recordsToSave);
+                    finishSubmit(recordsToSave);
+                }, 800);
+            }
+        }
+
+        function finishSubmit(records) {
+            hideLoading();
+            showMessage('success', 'บันทึกสำเร็จ', `บันทึกข้อมูลนักเรียนจำนวน ${records.length} คน เรียบร้อยแล้ว`);
+            document.querySelectorAll('.status-radio').forEach(r => r.checked = false);
+            applyFilter();
+        }
+
+        // ==========================================
+        // Report Logic
+        // ==========================================
+        async function loadReportData() {
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL + "?action=getRecords");
+                    const data = await response.json();
+                    return data;
+                } catch (e) {
+                    return mockRecords;
+                }
+            }
+            return mockRecords;
+        }
+
+        async function applyFilter() {
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const sClass = document.getElementById('filterClass').value;
+            const sStatus = document.getElementById('filterStatus').value;
+
+            let allRecords = await loadReportData();
+
+            const filtered = allRecords.filter(r => {
+                let isMatch = true;
+                if(startDate && r.date < startDate) isMatch = false;
+                if(endDate && r.date > endDate) isMatch = false;
+                if(sClass && r.className !== sClass) isMatch = false;
+                if(sStatus && r.status !== sStatus) isMatch = false;
+                
+                if (currentUser) {
+                    if (currentUser.role === 'นักเรียน' && r.studentId !== currentUser.studentId) {
+                        isMatch = false;
+                    }
+                    if (currentUser.role === 'ผู้ปกครอง' && r.studentId !== currentUser.childId) {
+                        isMatch = false;
+                    }
+                }
+
+                return isMatch;
+            });
+
+            renderReportTable(filtered);
+        }
+
+        function renderReportTable(data) {
+            const tbody = document.getElementById('reportTableBody');
+            const noDataMsg = document.getElementById('noReportDataMsg');
+            tbody.innerHTML = '';
+
+            if(data.length === 0) {
+                noDataMsg.style.display = 'block';
+                return;
+            }
+
+            noDataMsg.style.display = 'none';
+
+            data.sort((a,b) => new Date(b.date) - new Date(a.date));
+
+            data.forEach(r => {
+                let badgeClass = 'bg-secondary';
+                if(r.status === 'มา') badgeClass = 'bg-success';
+                else if(r.status === 'ลา') badgeClass = 'bg-warning text-dark';
+                else if(r.status === 'ขาด') badgeClass = 'bg-danger';
+                else if(r.status === 'สาย') badgeClass = 'bg-info text-dark';
+
+                const dateParts = r.date.split('-');
+                const thDate = `${dateParts[2]}/${dateParts[1]}/${parseInt(dateParts[0])+543}`;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${thDate}</td>
+                    <td>${r.studentId}</td>
+                    <td>${r.studentName}</td>
+                    <td>${r.className}</td>
+                    <td class="text-center"><span class="badge rounded-pill px-3 py-2 ${badgeClass}">${r.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetFilters() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('filterStartDate').value = today;
+            document.getElementById('filterEndDate').value = today;
+            
+            if (currentUser.role !== 'ครูที่ปรึกษา') {
+                document.getElementById('filterClass').value = "";
+            }
+            document.getElementById('filterStatus').value = "";
+            applyFilter();
+        }
+
+        // ==========================================
+        // Parent Settings Functions
+        // ==========================================
+        async function submitParentToken() {
+            const tokenVal = document.getElementById('lineTokenInput').value.trim();
+            
+            if (!tokenVal) {
+                showMessage('warning', 'กรุณากรอกข้อมูล', 'กรุณาวาง LINE Notify Token ก่อนกดบันทึก');
+                return;
+            }
+
+            const childId = currentUser.childId;
+            if (!childId) {
+                showMessage('error', 'ข้อผิดพลาด', 'ไม่พบข้อมูลบุตรหลานที่เชื่อมโยงกับบัญชีของท่าน');
+                return;
+            }
+
+            showLoading();
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'saveParentToken', 
+                            studentId: childId,
+                            token: tokenVal 
+                        })
+                    });
+                    const result = await response.json();
+                    
+                    hideLoading();
+                    if(result.status === 'success') {
+                        showMessage('success', 'บันทึกสำเร็จ', 'บันทึก Token ของท่านเรียบร้อยแล้ว ระบบจะส่งการแจ้งเตือนไปยัง LINE ของท่าน');
+                        document.getElementById('lineTokenInput').value = "";
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    hideLoading();
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลลงระบบได้');
+                }
+            } else {
+                setTimeout(() => {
+                    hideLoading();
+                    showMessage('success', 'จำลองการบันทึกสำเร็จ', 'บันทึก Token จำลองเรียบร้อยแล้ว (จำเป็นต้องเชื่อมต่อ Google Sheet เพื่อใช้งานจริง)');
+                    document.getElementById('lineTokenInput').value = "";
+                }, 800);
+            }
+        }
+    </script>
+</body>
+</html>
