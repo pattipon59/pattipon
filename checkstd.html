@@ -390,9 +390,10 @@
             { id: "2002", name: "นางสาวฟ้าใส ใจงาม", class: "ม.4/1" }
         ];
 
+        const todayStr = new Date().toISOString().split('T')[0];
         let mockRecords = [
-            { date: "2023-10-24", class: "ม.1/1", studentId: "1001", studentName: "เด็กชายสมชาย ใจดี", status: "มา" },
-            { date: "2023-10-24", class: "ม.1/1", studentId: "1002", studentName: "เด็กหญิงสมหญิง รักเรียน", status: "สาย" },
+            { date: todayStr, className: "ม.1/1", studentId: "1001", studentName: "เด็กชายสมชาย ใจดี", status: "มา" },
+            { date: todayStr, className: "ม.1/1", studentId: "1002", studentName: "เด็กหญิงสมหญิง รักเรียน", status: "สาย" },
         ];
 
         let currentStudentsList = [];
@@ -422,10 +423,13 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            checkDate.value = today;
-            document.getElementById('filterStartDate').value = today;
-            document.getElementById('filterEndDate').value = today;
+            const today = new Date();
+            const pastWeek = new Date();
+            pastWeek.setDate(today.getDate() - 7); // ค่าเริ่มต้นหน้ารายงานให้แสดงย้อนหลัง 7 วัน
+
+            checkDate.value = today.toISOString().split('T')[0];
+            document.getElementById('filterStartDate').value = pastWeek.toISOString().split('T')[0];
+            document.getElementById('filterEndDate').value = today.toISOString().split('T')[0];
         });
 
         // ==========================================
@@ -667,7 +671,7 @@
                     <td class="fw-bold">${student.name}</td>
                     <td class="text-center">
                         <div class="status-group" role="group">
-                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="ma_${student.id}" value="มา" autocomplete="off">
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="ma_${student.id}" value="มา" autocomplete="off" checked>
                             <label class="btn btn-outline-success" for="ma_${student.id}"><i class="bi bi-check-lg"></i> มา</label>
 
                             <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="la_${student.id}" value="ลา" autocomplete="off">
@@ -758,7 +762,8 @@
         function finishSubmit(records) {
             hideLoading();
             showMessage('success', 'บันทึกสำเร็จ', `บันทึกข้อมูลนักเรียนจำนวน ${records.length} คน เรียบร้อยแล้ว`);
-            document.querySelectorAll('.status-radio').forEach(r => r.checked = false);
+            // ตั้งค่ากลับเป็น "มา" ทั้งหมดหลังจากบันทึกเสร็จ
+            document.querySelectorAll('input[value="มา"]').forEach(r => r.checked = true);
             applyFilter();
         }
 
@@ -766,27 +771,45 @@
         // Report Logic
         // ==========================================
         async function loadReportData() {
+            let rawData = mockRecords;
             if (SCRIPT_URL !== "") {
                 try {
                     const response = await fetch(SCRIPT_URL + "?action=getRecords");
                     const text = await response.text();
-                    if(text.includes("<html") || text.includes("<body")) return [];
-                    const data = JSON.parse(text);
-                    // 🔥 ลบช่องว่างกันเหนียวเช่นกัน
-                    if(Array.isArray(data)) {
-                        return data.map(r => ({
-                            ...r,
-                            className: String(r.className || '').trim(),
-                            studentId: String(r.studentId || '').trim(),
-                            status: String(r.status || '').trim()
-                        }));
+                    if(!text.includes("<html") && !text.includes("<body")) {
+                        rawData = JSON.parse(text);
                     }
-                    return [];
                 } catch (e) {
-                    return [];
+                    console.error("Fetch report error:", e);
                 }
             }
-            return mockRecords;
+            
+            if(Array.isArray(rawData)) {
+                return rawData.map(r => {
+                    // ปรับ Format วันที่ให้เป็น YYYY-MM-DD เสมอ (ป้องกัน Google Sheet ส่งค่าวันที่ผิดรูปแบบมาให้)
+                    let normalizedDate = String(r.date || '').trim();
+                    if (normalizedDate.length > 10) {
+                        try {
+                            const d = new Date(normalizedDate);
+                            if (!isNaN(d.getTime())) {
+                                const yyyy = d.getFullYear();
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                normalizedDate = `${yyyy}-${mm}-${dd}`;
+                            }
+                        } catch(err) {}
+                    }
+                    
+                    return {
+                        ...r,
+                        date: normalizedDate,
+                        className: String(r.className || r.class || '').trim(), // รองรับทั้งชื่อตัวแปรเก่าและใหม่
+                        studentId: String(r.studentId || '').trim(),
+                        status: String(r.status || '').trim()
+                    };
+                });
+            }
+            return [];
         }
 
         async function applyFilter() {
@@ -840,8 +863,13 @@
                 else if(r.status === 'ขาด') badgeClass = 'bg-danger';
                 else if(r.status === 'สาย') badgeClass = 'bg-info text-dark';
 
-                const dateParts = r.date.split('-');
-                const thDate = `${dateParts[2]}/${dateParts[1]}/${parseInt(dateParts[0])+543}`;
+                let thDate = r.date;
+                if (r.date && r.date.includes('-')) {
+                    const dateParts = r.date.split('-');
+                    if(dateParts.length === 3) {
+                        thDate = `${dateParts[2]}/${dateParts[1]}/${parseInt(dateParts[0])+543}`;
+                    }
+                }
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
@@ -856,11 +884,14 @@
         }
 
         function resetFilters() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('filterStartDate').value = today;
-            document.getElementById('filterEndDate').value = today;
+            const today = new Date();
+            const pastWeek = new Date();
+            pastWeek.setDate(today.getDate() - 7);
+
+            document.getElementById('filterStartDate').value = pastWeek.toISOString().split('T')[0];
+            document.getElementById('filterEndDate').value = today.toISOString().split('T')[0];
             
-            if (currentUser.role !== 'ครูที่ปรึกษา') {
+            if (currentUser && currentUser.role !== 'ครูที่ปรึกษา') {
                 document.getElementById('filterClass').value = "";
             }
             document.getElementById('filterStatus').value = "";
