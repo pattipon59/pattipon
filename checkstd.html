@@ -160,17 +160,6 @@
                     <input type="password" class="form-control" id="password" required placeholder="กรอกรหัสผ่าน">
                 </div>
                 <button type="submit" class="btn btn-submit w-100">เข้าสู่ระบบ</button>
-                
-                <div class="mt-3 text-muted small text-start p-2 bg-light rounded border">
-                    <p class="mb-1 fw-bold">บัญชีทดสอบ (กรณีไม่ต่อฐานข้อมูล):</p>
-                    <ul class="mb-0 ps-3">
-                        <li>ผู้ดูแล: <code>admin</code> / <code>1234</code></li>
-                        <li>ครู (ม.1/1): <code>t101</code> / <code>1234</code></li>
-                        <li>ครู (ม.1/2): <code>t102</code> / <code>1234</code></li>
-                        <li>นักเรียน (ด.ช.สมชาย): <code>s1001</code> / <code>1234</code></li>
-                        <li>ผู้ปกครอง (ด.ช.สมชาย): <code>p1001</code> / <code>1234</code></li>
-                    </ul>
-                </div>
             </form>
         </div>
     </div>
@@ -386,7 +375,7 @@
         // ==========================================
         // ตั้งค่า URL ของ Google Apps Script Web App ของคุณที่นี่
         // ==========================================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzkEge68-BPDhkWJkgCvabd40TMEP9zhrZ4B32jZT2gq6SdzMezc5R3O73M9NO9qnk/exec"; 
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzcPNC5PR-tOXegk-wq492dh01rLE13ouGaKiDl4TRGU6W2kpagX-1ewF7_4cSE2-E/exec"; 
         
         // ==========================================
         // ข้อมูลจำลอง (Mock Data) ใช้ในกรณีที่ยังไม่ได้เชื่อมต่อ Google Sheet
@@ -457,10 +446,24 @@
                         method: 'POST',
                         body: JSON.stringify({ action: 'login', username: userVal, password: passVal })
                     });
-                    const result = await response.json();
+                    
+                    const text = await response.text();
+                    
+                    // ดักจับกรณีที่ Google ส่งหน้าต่าง Login กลับมาแทน JSON (สิทธิ์ไม่ใช่ Anyone)
+                    if (text.includes("<html") || text.includes("<body")) {
+                        hideLoading();
+                        showMessage('error', 'สิทธิ์การเข้าถึงผิดพลาด', 'กรุณากลับไปตั้งค่าสิทธิ์ Apps Script เป็น "ทุกคน (Anyone)"');
+                        return;
+                    }
+
+                    const result = JSON.parse(text);
                     
                     if (result.status === 'success') {
                         currentUser = result.user;
+                        // เคลียร์ Space ที่อาจมีในฐานข้อมูล
+                        if(currentUser.assignedClass) currentUser.assignedClass = String(currentUser.assignedClass).trim();
+                        if(currentUser.role) currentUser.role = String(currentUser.role).trim();
+                        
                         completeLoginProcess();
                     } else {
                         hideLoading();
@@ -468,7 +471,7 @@
                     }
                 } catch (err) {
                     hideLoading();
-                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้');
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ตรวจสอบ SCRIPT_URL');
                 }
             } else {
                 setTimeout(() => {
@@ -556,8 +559,17 @@
         async function initializeDataAfterLogin() {
             showLoading();
             await loadStudentData();
+            
+            // 🔥 ป้องกันบัค: เมื่อ loadStudentData สร้างตัวเลือกใหม่ จะทำให้ค่า Select เดิมหายไป 
+            // จึงต้องกำหนดค่าใหม่ให้กับครูที่ปรึกษาอีกครั้งหลังจากดึงข้อมูลเสร็จ
+            if (currentUser && currentUser.role === 'ครูที่ปรึกษา' && currentUser.assignedClass) {
+                classSelect.value = currentUser.assignedClass;
+                filterClass.value = currentUser.assignedClass;
+            }
+            
             hideLoading();
             
+            // หากมีการเลือกห้องเรียนไว้ ให้เรียกฟังก์ชันดึงรายชื่อมาแสดงทันที
             if(classSelect.value !== "") {
                 classSelect.dispatchEvent(new Event('change'));
             }
@@ -590,10 +602,29 @@
             if (SCRIPT_URL !== "") {
                 try {
                     const response = await fetch(SCRIPT_URL + "?action=getStudents");
-                    const data = await response.json();
-                    if(data && data.length > 0) dataToUse = data;
+                    const text = await response.text();
+                    
+                    // ดักจับกรณีดึงข้อมูลล้มเหลวเพราะติดสิทธิ์ Google
+                    if (text.includes("<html") || text.includes("<body")) {
+                        showMessage('error', 'สิทธิ์การเข้าถึงผิดพลาด', 'ระบบ Google Sheet ถูกปิดกั้น กรุณาตั้งค่าสิทธิ์ Web App เป็น "ทุกคน (Anyone)"');
+                        dataToUse = []; // ล้างข้อมูล
+                    } else {
+                        const data = JSON.parse(text);
+                        // 🔥 ป้องกันบัค: ลบช่องว่าง (Spacebar) หน้าและหลังข้อความ เผื่อผู้ใช้เผลอพิมพ์ใน Google Sheets
+                        if (Array.isArray(data)) {
+                            dataToUse = data.map(s => ({
+                                id: String(s.id || '').trim(),
+                                name: String(s.name || '').trim(),
+                                class: String(s.class || '').trim()
+                            }));
+                        } else {
+                            dataToUse = [];
+                        }
+                    }
                 } catch (e) {
-                    console.error("Failed to fetch from script, using mock data.", e);
+                    console.error("Failed to fetch from script:", e);
+                    showMessage('error', 'เชื่อมต่อล้มเหลว', 'ตรวจสอบ URL ของ Apps Script ว่าถูกต้องหรือไม่');
+                    dataToUse = [];
                 }
             }
 
@@ -605,8 +636,11 @@
             filterClass.innerHTML = '<option value="">ทั้งหมด</option>';
             
             classes.forEach(c => {
-                classSelect.add(new Option(c, c));
-                filterClass.add(new Option(c, c));
+                // ข้ามห้องเรียนที่ว่างเปล่า
+                if(c !== "") {
+                    classSelect.add(new Option(c, c));
+                    filterClass.add(new Option(c, c));
+                }
             });
         }
 
@@ -697,7 +731,12 @@
                             sendLine: isSendLine 
                         })
                     });
-                    const result = await response.json();
+                    
+                    const text = await response.text();
+                    if (text.includes("<html") || text.includes("<body")) {
+                        throw new Error("Permission Denied");
+                    }
+                    const result = JSON.parse(text);
                     
                     if(result.status === 'success') {
                         finishSubmit(recordsToSave);
@@ -706,7 +745,7 @@
                     }
                 } catch (e) {
                     console.error(e);
-                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลลง Google Sheet ได้');
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ (อาจเกิดจากการตั้งค่าสิทธิ์ผิดพลาด)');
                 }
             } else {
                 setTimeout(() => {
@@ -730,10 +769,21 @@
             if (SCRIPT_URL !== "") {
                 try {
                     const response = await fetch(SCRIPT_URL + "?action=getRecords");
-                    const data = await response.json();
-                    return data;
+                    const text = await response.text();
+                    if(text.includes("<html") || text.includes("<body")) return [];
+                    const data = JSON.parse(text);
+                    // 🔥 ลบช่องว่างกันเหนียวเช่นกัน
+                    if(Array.isArray(data)) {
+                        return data.map(r => ({
+                            ...r,
+                            className: String(r.className || '').trim(),
+                            studentId: String(r.studentId || '').trim(),
+                            status: String(r.status || '').trim()
+                        }));
+                    }
+                    return [];
                 } catch (e) {
-                    return mockRecords;
+                    return [];
                 }
             }
             return mockRecords;
@@ -846,7 +896,12 @@
                             token: tokenVal 
                         })
                     });
-                    const result = await response.json();
+                    
+                    const text = await response.text();
+                    if (text.includes("<html") || text.includes("<body")) {
+                        throw new Error("Permission Denied");
+                    }
+                    const result = JSON.parse(text);
                     
                     hideLoading();
                     if(result.status === 'success') {
