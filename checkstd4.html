@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเช็คชื่อหน้าเสาธง - โรงเรียนขัวเรียงศึกษา</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- html2pdf.js for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-green: #198754;
+            --dark-green: #146c43;
+            --light-green: #d1e7dd;
+            --bg-color: #f4f9f5;
+        }
+        body {
+            font-family: 'Prompt', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+        }
+        .navbar-custom {
+            background: linear-gradient(135deg, var(--dark-green), var(--primary-green));
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .card-header-custom {
+            background-color: #fff;
+            border-bottom: 2px solid var(--light-green);
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: var(--dark-green);
+        }
+        .nav-pills .nav-link {
+            color: var(--dark-green);
+            border-radius: 50px;
+            padding: 8px 20px;
+            margin: 0 5px;
+            font-weight: 500;
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-green);
+            color: white;
+            box-shadow: 0 2px 5px rgba(25, 135, 84, 0.4);
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: auto; 
+        }
+        .table thead th {
+            background-color: var(--light-green);
+            color: var(--dark-green);
+            font-weight: 600;
+            border-bottom: none;
+            white-space: nowrap;
+        }
+        .table tbody td {
+            vertical-align: middle;
+        }
+        /* Style for Radio Buttons as Badges */
+        .status-group .btn {
+            border-radius: 50px;
+            padding: 5px 15px;
+            font-size: 0.9rem;
+            margin: 2px;
+        }
+        .btn-submit {
+            background-color: var(--primary-green);
+            color: white;
+            border-radius: 50px;
+            padding: 10px 30px;
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(25, 135, 84, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn-submit:hover {
+            background-color: var(--dark-green);
+            transform: translateY(-2px);
+            color: white;
+        }
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.8);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .spinner-border {
+            color: var(--primary-green);
+            width: 3rem; height: 3rem;
+        }
+        /* --- Login Styles --- */
+        .login-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-color), var(--light-green));
+            position: relative;
+            z-index: 1000;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            padding: 2.5rem;
+            border-radius: 20px;
+            background: white;
+            box-shadow: 0 15px 35px rgba(20, 108, 67, 0.1);
+        }
+        
+        /* ==========================================
+           สไตล์สำหรับการ Print / Save as PDF
+           ========================================== */
+        @media print {
+            body {
+                background-color: #fff;
+                color: #000;
+            }
+            /* ซ่อนเมนูและส่วนที่ไม่ต้องการปริ้น */
+            .navbar-custom, #mainTabs, .btn, .input-group, .alert, 
+            label, input[type="date"], input[type="month"], select, 
+            .card-header-custom {
+                display: none !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .card-body {
+                padding: 0 !important;
+            }
+            /* ปรับพื้นที่ตารางให้เต็มหน้าจอ และขึ้นหน้าใหม่ให้สวยงาม */
+            #reportPrintArea {
+                width: 100%;
+            }
+            .table-responsive {
+                overflow: visible !important;
+            }
+            .table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+            }
+            .table th, .table td {
+                border: 1px solid #ddd !important;
+                padding: 8px !important;
+            }
+            .table thead th {
+                background-color: var(--light-green) !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            /* บังคับให้หัวตารางแสดงทุกหน้า */
+            thead {
+                display: table-header-group;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            /* บังคับเป็นแนวนอน */
+            @page {
+                size: landscape;
+                margin: 1cm;
+            }
+            #printTitle {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 20px;
+                color: #000;
+            }
+            /* ให้สีพื้นหลัง (เช่น ป้ายแจ้งเตือน) ติดมาใน PDF ด้วย */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border" role="status"></div>
+        <h5 class="mt-3 text-success" id="loadingText">กำลังประมวลผล...</h5>
+    </div>
+
+    <!-- Message Modal -->
+    <div class="modal fade" id="msgModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-body text-center p-4">
+                    <div id="msgIcon" class="display-1 mb-3"></div>
+                    <h4 id="msgTitle" class="mb-3">Title</h4>
+                    <p id="msgText" class="text-muted">Message</p>
+                    <button type="button" class="btn btn-success rounded-pill px-4" data-bs-dismiss="modal">ตกลง</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal (สำหรับการแก้ไขข้อมูลทับ) -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 15px;">
+                <div class="modal-body text-center p-4">
+                    <div class="display-1 mb-3"><i class="bi bi-question-circle-fill text-warning"></i></div>
+                    <h4 class="mb-3">ยืนยันการแก้ไขข้อมูล</h4>
+                    <p id="confirmText" class="text-muted">Message</p>
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="button" class="btn btn-warning rounded-pill px-4" id="confirmBtn"><i class="bi bi-save me-1"></i> บันทึกทับข้อมูลเดิม</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Section -->
+    <div id="loginSection" class="login-wrapper">
+        <div class="login-card text-center">
+            <i class="bi bi-shield-lock-fill text-success display-1 mb-3"></i>
+            <h3 class="mb-2 text-success" style="font-weight: 600;">เข้าสู่ระบบ</h3>
+            <p class="text-muted mb-4 small">ระบบเช็คชื่อหน้าเสาธง โรงเรียนขัวเรียงศึกษา</p>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-3 text-start">
+                    <label class="form-label text-muted small">ชื่อผู้ใช้ (Username)</label>
+                    <input type="text" class="form-control" id="username" required placeholder="กรอกชื่อผู้ใช้">
+                </div>
+                <div class="mb-4 text-start">
+                    <label class="form-label text-muted small">รหัสผ่าน (Password)</label>
+                    <input type="password" class="form-control" id="password" required placeholder="กรอกรหัสผ่าน">
+                </div>
+                <button type="submit" class="btn btn-submit w-100">เข้าสู่ระบบ</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App Section (Initially Hidden) -->
+    <div id="mainAppSection" style="display: none;">
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-dark navbar-custom py-2">
+            <div class="container d-flex justify-content-between align-items-center flex-wrap">
+                <div class="d-flex flex-column my-1">
+                    <h5 class="text-white mb-0"><i class="bi bi-flag-fill text-warning me-2"></i>ระบบเช็คชื่อหน้าเสาธง</h5>
+                    <div class="text-light d-none d-md-block" style="font-size: 0.8rem; opacity: 0.9;">
+                        โรงเรียนขัวเรียงศึกษา
+                    </div>
+                </div>
+                
+                <!-- User Profile Dropdown -->
+                <div class="dropdown my-1">
+                    <button class="btn btn-light btn-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--dark-green); font-weight: 500;">
+                        <i class="bi bi-person-circle me-1"></i> <span id="displayUserName">ผู้ใช้งาน</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end border-0 shadow">
+                        <li><span class="dropdown-item-text text-muted small" id="displayUserRole">Role</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" onclick="handleLogout()"><i class="bi bi-box-arrow-right me-2"></i>ออกจากระบบ</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Container -->
+        <div class="container my-4">
+            
+            <!-- Tab Navigation -->
+            <ul class="nav nav-pills justify-content-center mb-4" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="checkin-tab" data-bs-toggle="pill" data-bs-target="#checkin" type="button" role="tab"><i class="bi bi-person-check-fill me-1"></i> เช็คชื่อ</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="report-tab" data-bs-toggle="pill" data-bs-target="#report" type="button" role="tab"><i class="bi bi-file-earmark-bar-graph-fill me-1"></i> รายงานข้อมูล</button>
+                </li>
+                <!-- เพิ่มแท็บสำหรับผู้ปกครองตั้งค่า LINE -->
+                <li class="nav-item" role="presentation" id="settings-tab-container" style="display: none;">
+                    <button class="nav-link text-success" id="settings-tab" data-bs-toggle="pill" data-bs-target="#settings" type="button" role="tab"><i class="bi bi-gear-fill me-1"></i> ตั้งค่าการแจ้งเตือน</button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="mainTabsContent">
+                
+                <!-- CHECK-IN TAB -->
+                <div class="tab-pane fade show active" id="checkin" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header-custom d-flex justify-content-between align-items-center flex-wrap">
+                            <span class="mb-2 mb-md-0"><i class="bi bi-card-checklist me-2"></i>บันทึกการเข้าร่วมกิจกรรม</span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Selectors -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">วันที่เช็คชื่อ</label>
+                                    <input type="date" class="form-control" id="checkDate">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted">ระดับชั้น / ห้อง</label>
+                                    <select class="form-select" id="classSelect">
+                                        <option value="">-- กรุณาเลือกห้องเรียน --</option>
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Student List Table -->
+                            <div class="table-responsive" id="studentTableContainer" style="display:none;">
+                                <table class="table table-hover align-middle text-nowrap" id="studentTable">
+                                    <thead>
+                                        <tr>
+                                            <th width="10%" class="text-center">เลขที่/รหัส</th>
+                                            <th width="30%">ชื่อ - นามสกุล</th>
+                                            <th width="60%" class="text-center">สถานะการเข้าร่วม</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentListBody">
+                                        <!-- Students will be injected here -->
+                                    </tbody>
+                                </table>
+                                <div class="text-center mt-4">
+                                    <!-- สวิตช์เปิด-ปิด LINE Notify -->
+                                    <div class="form-check form-switch d-inline-block text-start mb-3 me-3 align-middle">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="sendLineNotify" checked style="cursor: pointer;">
+                                        <label class="form-check-label text-muted" for="sendLineNotify" style="cursor: pointer;"><i class="bi bi-line text-success"></i> ส่งแจ้งเตือนผ่าน LINE</label>
+                                    </div>
+                                    
+                                    <button class="btn btn-submit" onclick="submitAttendance()">
+                                        <i class="bi bi-cloud-arrow-up-fill me-2"></i>บันทึกข้อมูลลงระบบ
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div id="noClassSelectedMsg" class="text-center py-5 text-muted">
+                                <i class="bi bi-search display-1 text-light"></i>
+                                <p class="mt-3">กรุณาเลือกห้องเรียนเพื่อแสดงรายชื่อนักเรียน</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- REPORT TAB -->
+                <div class="tab-pane fade" id="report" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-funnel-fill me-2"></i>ตัวกรองข้อมูล
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- เพิ่มระบบเลือกเดือนสำหรับสรุปรายเดือน -->
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-bold text-success">สรุปประจำเดือน</label>
+                                    <input type="month" class="form-control border-success" id="filterMonth" onchange="setMonthRange()">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">ตั้งแต่วันที่</label>
+                                    <input type="date" class="form-control" id="filterStartDate">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">ถึงวันที่</label>
+                                    <input type="date" class="form-control" id="filterEndDate">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted">ระดับชั้น</label>
+                                    <select class="form-select" id="filterClass">
+                                        <option value="">ทั้งหมด</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-12 text-end mt-3">
+                                    <button class="btn btn-outline-danger rounded-pill px-4 me-2" onclick="exportPDF()"><i class="bi bi-printer-fill me-1"></i> ส่งออก PDF / พิมพ์</button>
+                                    <button class="btn btn-outline-secondary rounded-pill px-4 me-2" onclick="resetFilters()">ล้างค่า</button>
+                                    <button class="btn btn-success rounded-pill px-4" onclick="applyFilter()"><i class="bi bi-search me-1"></i> ค้นหา</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- พื้นที่ตารางสำหรับการแสดงผลและส่งออก PDF -->
+                    <div class="card mt-3" id="reportPrintArea">
+                        <div class="card-body p-3">
+                            <div id="printTitle" style="display: none;" class="mb-4 mt-2">
+                                <!-- ข้อความหัวกระดาษจะถูกแทรกที่นี่ตอนสั่งปริ้น -->
+                            </div>
+                            <div class="table-responsive" id="reportTableContainer">
+                                <table class="table table-striped table-hover table-bordered mb-0 text-nowrap">
+                                    <thead>
+                                        <tr id="reportTableHeader">
+                                            <!-- Headers will be dynamically injected here -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportTableBody">
+                                        <!-- Report Data -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div id="noReportDataMsg" class="text-center py-4 text-muted" style="display: none;">
+                                ไม่พบข้อมูลตามเงื่อนไขที่ค้นหา
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS TAB (สำหรับผู้ปกครอง) -->
+                <div class="tab-pane fade" id="settings" role="tabpanel">
+                    <div class="card border-success border-opacity-50">
+                        <div class="card-header-custom bg-success bg-opacity-10 text-success border-bottom-0 rounded-top" style="border-radius: 15px 15px 0 0;">
+                            <i class="bi bi-line me-2"></i>ตั้งค่ารับการแจ้งเตือนผ่าน LINE Official
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="alert alert-info rounded-3 mb-4" role="alert">
+                                <h6 class="alert-heading fw-bold"><i class="bi bi-info-circle-fill me-2"></i>วิธีรับค่า User ID (UID) สำหรับการแจ้งเตือน</h6>
+                                <ol class="mb-0 ps-3 small text-muted">
+                                    <li>เพิ่มเพื่อน <strong>LINE Official Account ของโรงเรียน</strong> (แสกน QR Code หรือเพิ่มจาก ID ที่โรงเรียนกำหนด)</li>
+                                    <li>เข้าไปที่ห้องแชทของโรงเรียน และพิมพ์ข้อความว่า <strong>"ขอรหัส"</strong> หรือกดที่เมนูด้านล่าง</li>
+                                    <li>ระบบจะตอบกลับพร้อมแจ้ง <strong>LINE User ID</strong> ของท่าน (รหัสจะขึ้นต้นด้วยตัวอักษร <strong>U</strong> ตามด้วยตัวเลขและภาษาอังกฤษ)</li>
+                                    <li>คัดลอกรหัส User ID นั้นมาวางในช่องด้านล่างนี้</li>
+                                </ol>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="lineUidInput" class="form-label fw-bold text-muted">LINE User ID ของท่าน (UID)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="bi bi-person-badge-fill text-muted"></i></span>
+                                    <input type="text" class="form-control" id="lineUidInput" placeholder="วาง LINE User ID (เช่น U12345...) ที่นี่...">
+                                    <button class="btn btn-success px-4" type="button" onclick="submitParentToken()">บันทึก User ID</button>
+                                </div>
+                                <div class="form-text mt-2"><i class="bi bi-shield-check text-success me-1"></i>ระบบจะส่งแจ้งเตือนการเข้าแถวของบุตรหลานไปยัง LINE ของท่านอัตโนมัติ</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div> <!-- End Main App Section -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application Logic -->
+    <script>
+        // ==========================================
+        // ตั้งค่า URL ของ Google Apps Script Web App ของคุณที่นี่
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCNwabdg0C5d3E5Sla-SvDbw-qwljKdmXtuWCALa6B5j4DXhShJ_KkpDn-YlCiNek/exec"; 
+        
+        // ==========================================
+        // ตัวแปรสำหรับแปลงเดือนเป็นภาษาไทย
+        // ==========================================
+        const thaiMonthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+        const thaiMonthsFull = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+
+        // ==========================================
+        // ข้อมูลจำลอง (Mock Data) ใช้ในกรณีที่ยังไม่ได้เชื่อมต่อ Google Sheet
+        // ==========================================
+        let mockStudents = [
+            { id: "1001", name: "เด็กชายสมชาย ใจดี", class: "ม.1/1" },
+            { id: "1002", name: "เด็กหญิงสมหญิง รักเรียน", class: "ม.1/1" },
+            { id: "1003", name: "เด็กชายมีชัย ใฝ่รู้", class: "ม.1/1" },
+            { id: "1004", name: "เด็กหญิงวันดี สีสวย", class: "ม.1/2" },
+            { id: "1005", name: "เด็กชายกล้าหาญ ชาญชัย", class: "ม.1/2" },
+            { id: "2001", name: "นายขยัน หมั่นเพียร", class: "ม.4/1" },
+            { id: "2002", name: "นางสาวฟ้าใส ใจงาม", class: "ม.4/1" }
+        ];
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const yesterdayStr = new Date(new Date().setDate(new Date().getDate()-1)).toISOString().split('T')[0];
+        
+        let mockRecords = [
+            { date: yesterdayStr, className: "ม.1/1", studentId: "1001", studentName: "เด็กชายสมชาย ใจดี", status: "มา", recordedBy: "ครูสมหญิง" },
+            { date: yesterdayStr, className: "ม.1/1", studentId: "1002", studentName: "เด็กหญิงสมหญิง รักเรียน", status: "ขาด", recordedBy: "ครูสมหญิง" },
+            { date: todayStr, className: "ม.1/1", studentId: "1001", studentName: "เด็กชายสมชาย ใจดี", status: "มา", recordedBy: "ครูสมหญิง" },
+            { date: todayStr, className: "ม.1/1", studentId: "1002", studentName: "เด็กหญิงสมหญิง รักเรียน", status: "สาย", recordedBy: "ครูสมหญิง" },
+        ];
+
+        let currentStudentsList = [];
+        let currentUser = null;
+
+        // ==========================================
+        // ระบบจำลองข้อมูลผู้ใช้งาน (Mock Users)
+        // ==========================================
+        const MOCK_USERS = [
+            { username: "admin", password: "1234", role: "admin", name: "แอดมิน ระบบ", displayRole: "ผู้ดูแลระบบ" },
+            { username: "director", password: "1234", role: "ผู้บริหาร", name: "ผอ.ใจดี รักเรียน", displayRole: "ผู้บริหาร" },
+            { username: "t101", password: "1234", role: "ครูที่ปรึกษา", name: "ครูสมหญิง", displayRole: "ครูที่ปรึกษา", assignedClass: "ม.1/1" },
+            { username: "t102", password: "1234", role: "ครูที่ปรึกษา", name: "ครูสมเกียรติ", displayRole: "ครูที่ปรึกษา", assignedClass: "ม.1/2" },
+            { username: "s1001", password: "1234", role: "นักเรียน", name: "ด.ช.สมชาย ใจดี", displayRole: "นักเรียน", studentId: "1001" },
+            { username: "s1002", password: "1234", role: "นักเรียน", name: "ด.ญ.สมหญิง รักเรียน", displayRole: "นักเรียน", studentId: "1002" },
+            { username: "p1001", password: "1234", role: "ผู้ปกครอง", name: "ผปค. ด.ช.สมชาย", displayRole: "ผู้ปกครอง", childId: "1001" }
+        ];
+
+        // Elements
+        const classSelect = document.getElementById('classSelect');
+        const filterClass = document.getElementById('filterClass');
+        const studentTableContainer = document.getElementById('studentTableContainer');
+        const noClassSelectedMsg = document.getElementById('noClassSelectedMsg');
+        const studentListBody = document.getElementById('studentListBody');
+        const checkDate = document.getElementById('checkDate');
+        const msgModal = new bootstrap.Modal(document.getElementById('msgModal'));
+        const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const pastWeek = new Date();
+            pastWeek.setDate(today.getDate() - 7); // ค่าเริ่มต้นหน้ารายงานให้แสดงย้อนหลัง 7 วัน
+
+            checkDate.value = today.toISOString().split('T')[0];
+            document.getElementById('filterStartDate').value = pastWeek.toISOString().split('T')[0];
+            document.getElementById('filterEndDate').value = today.toISOString().split('T')[0];
+        });
+
+        // ==========================================
+        // Authentication Logic
+        // ==========================================
+        async function handleLogin(e) {
+            e.preventDefault();
+            const userVal = document.getElementById('username').value;
+            const passVal = document.getElementById('password').value;
+
+            if(!userVal || !passVal) return;
+            
+            showLoading("กำลังเข้าสู่ระบบ...");
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'login', username: userVal, password: passVal })
+                    });
+                    
+                    const text = await response.text();
+                    
+                    // ดักจับกรณีที่ Google ส่งหน้าต่าง Login กลับมาแทน JSON (สิทธิ์ไม่ใช่ Anyone)
+                    if (text.includes("<html") || text.includes("<body")) {
+                        hideLoading();
+                        showMessage('error', 'สิทธิ์การเข้าถึงผิดพลาด', 'กรุณากลับไปตั้งค่าสิทธิ์ Apps Script เป็น "ทุกคน (Anyone)"');
+                        return;
+                    }
+
+                    const result = JSON.parse(text);
+                    
+                    if (result.status === 'success') {
+                        currentUser = result.user;
+                        // เคลียร์ Space ที่อาจมีในฐานข้อมูล
+                        if(currentUser.assignedClass) currentUser.assignedClass = String(currentUser.assignedClass).trim();
+                        if(currentUser.role) currentUser.role = String(currentUser.role).trim();
+                        
+                        completeLoginProcess();
+                    } else {
+                        hideLoading();
+                        showMessage('error', 'เข้าสู่ระบบล้มเหลว', result.message || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                    }
+                } catch (err) {
+                    hideLoading();
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ ตรวจสอบ SCRIPT_URL');
+                }
+            } else {
+                setTimeout(() => {
+                    const user = MOCK_USERS.find(u => u.username === userVal && u.password === passVal);
+                    if (user) {
+                        currentUser = user;
+                        completeLoginProcess();
+                    } else {
+                        hideLoading();
+                        showMessage('error', 'เข้าสู่ระบบล้มเหลว', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+                    }
+                }, 800);
+            }
+        }
+
+        function completeLoginProcess() {
+            document.getElementById('displayUserName').innerText = currentUser.name;
+            document.getElementById('displayUserRole').innerText = `สิทธิ์: ${currentUser.displayRole}`;
+            
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainAppSection').style.display = 'block';
+
+            applyRolePermissions();
+            initializeDataAfterLogin();
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('mainAppSection').style.display = 'none';
+            document.getElementById('loginForm').reset();
+            
+            classSelect.disabled = false;
+            filterClass.disabled = false;
+            
+            document.getElementById('studentListBody').innerHTML = '';
+            document.getElementById('reportTableBody').innerHTML = '';
+            document.getElementById('reportTableHeader').innerHTML = '';
+            document.getElementById('studentTableContainer').style.display = 'none';
+            document.getElementById('noClassSelectedMsg').style.display = 'block';
+        }
+
+        function applyRolePermissions() {
+            const checkinTabItem = document.getElementById('checkin-tab').parentElement;
+            const settingsTabItem = document.getElementById('settings-tab-container');
+            
+            if (currentUser.role === 'admin' || currentUser.role === 'ครูที่ปรึกษา') {
+                checkinTabItem.style.display = 'block';
+                const tab = new bootstrap.Tab(document.getElementById('checkin-tab'));
+                tab.show();
+                
+                settingsTabItem.style.display = 'none';
+                
+                if(currentUser.role === 'ครูที่ปรึกษา' && currentUser.assignedClass) {
+                    classSelect.value = currentUser.assignedClass;
+                    classSelect.disabled = true; 
+                    
+                    filterClass.value = currentUser.assignedClass;
+                    filterClass.disabled = true; 
+                } else {
+                    classSelect.value = "";
+                    classSelect.disabled = false;
+                    filterClass.value = "";
+                    filterClass.disabled = false;
+                }
+            } else {
+                checkinTabItem.style.display = 'none';
+                const tab = new bootstrap.Tab(document.getElementById('report-tab'));
+                tab.show();
+
+                if (currentUser.role === 'ผู้ปกครอง') {
+                    settingsTabItem.style.display = 'block';
+                } else {
+                    settingsTabItem.style.display = 'none';
+                }
+            }
+
+            const filterClassContainer = document.getElementById('filterClass').parentElement;
+            if (currentUser.role === 'นักเรียน' || currentUser.role === 'ผู้ปกครอง') {
+                filterClassContainer.style.display = 'none'; 
+            } else {
+                filterClassContainer.style.display = 'block';
+            }
+        }
+
+        async function initializeDataAfterLogin() {
+            showLoading("กำลังดึงข้อมูลฐานข้อมูล...");
+            await loadStudentData();
+            
+            if (currentUser && currentUser.role === 'ครูที่ปรึกษา' && currentUser.assignedClass) {
+                classSelect.value = currentUser.assignedClass;
+                filterClass.value = currentUser.assignedClass;
+            }
+            
+            hideLoading();
+            
+            if(classSelect.value !== "") {
+                loadAndRenderTable();
+            }
+            applyFilter();
+        }
+
+        // ==========================================
+        // Data Handling
+        // ==========================================
+        function showMessage(type, title, text) {
+            const icon = document.getElementById('msgIcon');
+            if(type === 'success') {
+                icon.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+            } else if (type === 'error') {
+                icon.innerHTML = '<i class="bi bi-x-circle-fill text-danger"></i>';
+            } else {
+                icon.innerHTML = '<i class="bi bi-exclamation-circle-fill text-warning"></i>';
+            }
+            document.getElementById('msgTitle').innerText = title;
+            document.getElementById('msgText').innerText = text;
+            msgModal.show();
+        }
+
+        function showLoading(text = "กำลังประมวลผล...") { 
+            document.getElementById('loadingText').innerText = text;
+            document.getElementById('loadingOverlay').style.display = 'flex'; 
+        }
+        function hideLoading() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+        async function loadStudentData() {
+            let dataToUse = mockStudents;
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL + "?action=getStudents");
+                    const text = await response.text();
+                    
+                    if (text.includes("<html") || text.includes("<body")) {
+                        showMessage('error', 'สิทธิ์การเข้าถึงผิดพลาด', 'ระบบ Google Sheet ถูกปิดกั้น กรุณาตั้งค่าสิทธิ์ Web App เป็น "ทุกคน (Anyone)"');
+                        dataToUse = []; 
+                    } else {
+                        const data = JSON.parse(text);
+                        if (Array.isArray(data)) {
+                            dataToUse = data.map(s => ({
+                                id: String(s.id || '').trim(),
+                                name: String(s.name || '').trim(),
+                                class: String(s.class || '').trim()
+                            }));
+                        } else {
+                            dataToUse = [];
+                        }
+                    }
+                } catch (e) {
+                    console.error("Failed to fetch from script:", e);
+                    showMessage('error', 'เชื่อมต่อล้มเหลว', 'ตรวจสอบ URL ของ Apps Script ว่าถูกต้องหรือไม่');
+                    dataToUse = [];
+                }
+            }
+
+            currentStudentsList = dataToUse;
+            
+            const classes = [...new Set(dataToUse.map(s => s.class))].sort();
+            
+            classSelect.innerHTML = '<option value="">-- กรุณาเลือกห้องเรียน --</option>';
+            filterClass.innerHTML = '<option value="">ทั้งหมด</option>';
+            
+            classes.forEach(c => {
+                if(c !== "") {
+                    classSelect.add(new Option(c, c));
+                    filterClass.add(new Option(c, c));
+                }
+            });
+        }
+
+        // โหลดข้อมูลเก่ามาโชว์ หากเคยมีการบันทึกไปแล้ว
+        async function loadAndRenderTable() {
+            const selectedClass = classSelect.value;
+            const selectedDate = checkDate.value;
+            
+            if (!selectedClass || !selectedDate) {
+                studentTableContainer.style.display = 'none';
+                noClassSelectedMsg.style.display = 'block';
+                return;
+            }
+
+            studentTableContainer.style.display = 'block';
+            noClassSelectedMsg.style.display = 'none';
+            
+            // แสดงโหมด Loading ชั่วคราวเพื่อดึงข้อมูลเก่ามาแมตช์
+            studentListBody.innerHTML = '<tr><td colspan="3" class="text-center py-4"><div class="spinner-border text-success spinner-border-sm" role="status"></div><span class="ms-2 text-muted">กำลังตรวจสอบประวัติ...</span></td></tr>';
+
+            let allRecords = await loadReportData();
+            const existingRecords = allRecords.filter(r => r.date === selectedDate && r.className === selectedClass);
+
+            renderStudentTable(selectedClass, existingRecords);
+        }
+
+        classSelect.addEventListener('change', loadAndRenderTable);
+        checkDate.addEventListener('change', loadAndRenderTable);
+
+        function renderStudentTable(className, existingRecords = []) {
+            studentListBody.innerHTML = '';
+            const filteredStudents = currentStudentsList.filter(s => s.class === className);
+            
+            filteredStudents.forEach((student) => {
+                // หาว่าเด็กคนนี้เคยถูกเช็คไปแล้วหรือยังในรอบนี้
+                const existing = existingRecords.find(r => r.studentId === student.id);
+                const status = existing ? existing.status : 'มา'; // ถ้าไม่มีประวัติ ให้ตั้งเป็น 'มา'
+                
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="text-center text-muted">${student.id}</td>
+                    <td class="fw-bold">${student.name}</td>
+                    <td class="text-center">
+                        <div class="status-group" role="group">
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="ma_${student.id}" value="มา" autocomplete="off" ${status === 'มา' ? 'checked' : ''}>
+                            <label class="btn btn-outline-success" for="ma_${student.id}"><i class="bi bi-check-lg"></i> มา</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="la_${student.id}" value="ลา" autocomplete="off" ${status === 'ลา' ? 'checked' : ''}>
+                            <label class="btn btn-outline-warning" for="la_${student.id}">ลา</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="khad_${student.id}" value="ขาด" autocomplete="off" ${status === 'ขาด' ? 'checked' : ''}>
+                            <label class="btn btn-outline-danger" for="khad_${student.id}"><i class="bi bi-x-lg"></i> ขาด</label>
+
+                            <input type="radio" class="btn-check status-radio" name="status_${student.id}" id="sai_${student.id}" value="สาย" autocomplete="off" ${status === 'สาย' ? 'checked' : ''}>
+                            <label class="btn btn-outline-info" for="sai_${student.id}">สาย</label>
+                        </div>
+                    </td>
+                `;
+                studentListBody.appendChild(tr);
+            });
+        }
+
+        async function submitAttendance() {
+            const dateVal = checkDate.value;
+            const classVal = classSelect.value;
+            
+            if(!dateVal || !classVal) {
+                showMessage('warning', 'ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกวันที่และห้องเรียน');
+                return;
+            }
+
+            const filteredStudents = currentStudentsList.filter(s => s.class === classVal);
+            let recordsToSave = [];
+            let missingCount = 0;
+
+            filteredStudents.forEach(student => {
+                const checkedRadio = document.querySelector(`input[name="status_${student.id}"]:checked`);
+                if (checkedRadio) {
+                    recordsToSave.push({
+                        date: dateVal,
+                        className: classVal,
+                        studentId: student.id,
+                        studentName: student.name,
+                        status: checkedRadio.value,
+                        // แนบชื่อครูผู้บันทึกข้อมูลไปด้วย
+                        recordedBy: currentUser.name 
+                    });
+                } else {
+                    missingCount++;
+                }
+            });
+
+            if (missingCount > 0) {
+                showMessage('warning', 'ตรวจสอบข้อมูล', `มีนักเรียนที่ยังไม่ได้เช็คชื่อจำนวน ${missingCount} คน`);
+                return;
+            }
+
+            showLoading("กำลังบันทึกข้อมูล...");
+
+            let allRecords = await loadReportData();
+            const isDuplicate = allRecords.some(r => r.date === dateVal && r.className === classVal);
+            const isSendLine = document.getElementById('sendLineNotify').checked;
+            
+            hideLoading();
+            
+            // หากมีการบันทึกซ้ำ ให้ถามยืนยันก่อนแก้ไขทับของเดิม
+            if (isDuplicate) {
+                const dateParts = dateVal.split('-');
+                const thDate = `${parseInt(dateParts[2])} ${thaiMonthsShort[parseInt(dateParts[1])-1]} ${parseInt(dateParts[0])+543}`;
+                
+                document.getElementById('confirmText').innerText = `ห้อง ${classVal} มีประวัติการเช็คชื่อในวันที่ ${thDate} แล้ว ท่านต้องการแก้ไขและบันทึกข้อมูลใหม่ทับข้อมูลเดิมหรือไม่?`;
+                confirmModal.show();
+                
+                document.getElementById('confirmBtn').onclick = () => {
+                    confirmModal.hide();
+                    executeSubmit(recordsToSave, isSendLine, 'updateAttendance');
+                };
+                return;
+            }
+
+            // ถ้าไม่ซ้ำ ก็บันทึกปกติ
+            executeSubmit(recordsToSave, isSendLine, 'submitAttendance');
+        }
+
+        async function executeSubmit(recordsToSave, isSendLine, actionType) {
+            showLoading("กำลังอัปเดตฐานข้อมูล...");
+            
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: actionType, 
+                            data: recordsToSave,
+                            sendLine: isSendLine 
+                        })
+                    });
+                    
+                    const text = await response.text();
+                    if (text.includes("<html") || text.includes("<body")) {
+                        throw new Error("Permission Denied");
+                    }
+                    const result = JSON.parse(text);
+                    
+                    if(result.status === 'success') {
+                        finishSubmit(recordsToSave);
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้ (อาจเกิดจากการตั้งค่าสิทธิ์ผิดพลาด)');
+                }
+            } else {
+                setTimeout(() => {
+                    // จำลองการแก้ไข (ลบของเก่าออกก่อน)
+                    if (actionType === 'updateAttendance') {
+                        const targetDate = recordsToSave[0].date;
+                        const targetClass = recordsToSave[0].className;
+                        mockRecords = mockRecords.filter(r => !(r.date === targetDate && r.className === targetClass));
+                    }
+                    
+                    mockRecords = mockRecords.concat(recordsToSave);
+                    finishSubmit(recordsToSave);
+                }, 800);
+            }
+        }
+
+        function finishSubmit(records) {
+            hideLoading();
+            showMessage('success', 'บันทึกสำเร็จ', `บันทึกข้อมูลนักเรียนจำนวน ${records.length} คน เรียบร้อยแล้ว`);
+            applyFilter();
+        }
+
+        // ==========================================
+        // Report Logic
+        // ==========================================
+        
+        // ฟังก์ชันตั้งค่าวันที่จากช่องเลือกเดือน
+        function setMonthRange() {
+            const monthVal = document.getElementById('filterMonth').value;
+            if (!monthVal) return;
+            
+            const [year, month] = monthVal.split('-');
+            const startDate = new Date(year, parseInt(month) - 1, 1);
+            const endDate = new Date(year, parseInt(month), 0); // วันสุดท้ายของเดือน
+            
+            const startStr = `${year}-${month}-01`;
+            const endStr = `${year}-${month}-${String(endDate.getDate()).padStart(2, '0')}`;
+            
+            document.getElementById('filterStartDate').value = startStr;
+            document.getElementById('filterEndDate').value = endStr;
+            
+            applyFilter();
+        }
+
+        async function loadReportData() {
+            let rawData = mockRecords;
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL + "?action=getRecords");
+                    const text = await response.text();
+                    if(!text.includes("<html") && !text.includes("<body")) {
+                        rawData = JSON.parse(text);
+                    }
+                } catch (e) {
+                    console.error("Fetch report error:", e);
+                }
+            }
+            
+            if(Array.isArray(rawData)) {
+                return rawData.map(r => {
+                    // ปรับ Format วันที่ให้เป็น YYYY-MM-DD เสมอ (ป้องกัน Google Sheet ส่งค่าวันที่ผิดรูปแบบมาให้)
+                    let normalizedDate = String(r.date || '').trim();
+                    if (normalizedDate.length > 10) {
+                        try {
+                            const d = new Date(normalizedDate);
+                            if (!isNaN(d.getTime())) {
+                                const yyyy = d.getFullYear();
+                                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                                const dd = String(d.getDate()).padStart(2, '0');
+                                normalizedDate = `${yyyy}-${mm}-${dd}`;
+                            }
+                        } catch(err) {}
+                    }
+                    
+                    return {
+                        ...r,
+                        date: normalizedDate,
+                        className: String(r.className || r.class || '').trim(), 
+                        studentId: String(r.studentId || '').trim(),
+                        status: String(r.status || '').trim(),
+                        recordedBy: String(r.recordedBy || '').trim() // ดึงข้อมูลผู้บันทึกมาด้วย
+                    };
+                });
+            }
+            return [];
+        }
+
+        async function applyFilter() {
+            const startDate = document.getElementById('filterStartDate').value;
+            const endDate = document.getElementById('filterEndDate').value;
+            const sClass = document.getElementById('filterClass').value;
+            
+            let allRecords = await loadReportData();
+
+            const filtered = allRecords.filter(r => {
+                let isMatch = true;
+                if(startDate && r.date < startDate) isMatch = false;
+                if(endDate && r.date > endDate) isMatch = false;
+                if(sClass && r.className !== sClass) isMatch = false;
+                
+                if (currentUser) {
+                    if (currentUser.role === 'นักเรียน' && r.studentId !== currentUser.studentId) {
+                        isMatch = false;
+                    }
+                    if (currentUser.role === 'ผู้ปกครอง' && r.studentId !== currentUser.childId) {
+                        isMatch = false;
+                    }
+                }
+
+                return isMatch;
+            });
+
+            renderReportTable(filtered);
+        }
+
+        function renderReportTable(data) {
+            const theadTr = document.getElementById('reportTableHeader');
+            const tbody = document.getElementById('reportTableBody');
+            const noDataMsg = document.getElementById('noReportDataMsg');
+            
+            theadTr.innerHTML = '';
+            tbody.innerHTML = '';
+
+            if(data.length === 0) {
+                noDataMsg.style.display = 'block';
+                return;
+            }
+
+            noDataMsg.style.display = 'none';
+
+            // 1. หาค่าวันที่ที่ไม่ซ้ำกันเพื่อสร้างคอลัมน์ เรียงจากเก่าไปใหม่
+            const uniqueDates = [...new Set(data.map(r => r.date))].sort((a, b) => new Date(a) - new Date(b));
+
+            // 2. สร้าง Header ของตาราง
+            let headHTML = `
+                <th class="text-center" width="10%">รหัส</th>
+                <th width="20%">ชื่อ - นามสกุล</th>
+                <th class="text-center" width="10%">ชั้น</th>
+            `;
+            uniqueDates.forEach(d => {
+                if (d && d.includes('-')) {
+                    const dateParts = d.split('-');
+                    const shortDate = `${parseInt(dateParts[2])} ${thaiMonthsShort[parseInt(dateParts[1])-1]}`;
+                    headHTML += `<th class="text-center">${shortDate}</th>`;
+                } else {
+                    headHTML += `<th class="text-center">${d}</th>`;
+                }
+            });
+            headHTML += `<th class="text-center">สรุปรวม</th>`;
+            theadTr.innerHTML = headHTML;
+
+            // 3. จัดกลุ่มข้อมูลตามรหัสนักเรียน (Cross-tabulation)
+            const studentsMap = {};
+            data.forEach(r => {
+                if (!studentsMap[r.studentId]) {
+                    studentsMap[r.studentId] = {
+                        id: r.studentId,
+                        name: r.studentName,
+                        className: r.className,
+                        attendance: {},
+                        summary: { 'มา': 0, 'ลา': 0, 'ขาด': 0, 'สาย': 0 }
+                    };
+                }
+                
+                // เก็บสถานะการมาเรียนตามวันที่
+                studentsMap[r.studentId].attendance[r.date] = r.status;
+                
+                // นับยอดสรุป
+                if(studentsMap[r.studentId].summary[r.status] !== undefined) {
+                    studentsMap[r.studentId].summary[r.status]++;
+                }
+            });
+
+            // แปลง Object เป็น Array แล้วเรียงลำดับตามระดับชั้น และรหัสนักเรียน
+            const studentsArray = Object.values(studentsMap).sort((a, b) => {
+                if (a.className !== b.className) return a.className.localeCompare(b.className);
+                return a.id.localeCompare(b.id);
+            });
+
+            // 4. สร้างข้อมูลแต่ละแถว (รายคน)
+            studentsArray.forEach(student => {
+                const tr = document.createElement('tr');
+                let rowHTML = `
+                    <td class="text-center text-muted">${student.id}</td>
+                    <td class="fw-bold">${student.name}</td>
+                    <td class="text-center">${student.className}</td>
+                `;
+
+                // คอลัมน์สถานะแต่ละวัน
+                uniqueDates.forEach(d => {
+                    const status = student.attendance[d];
+                    let badge = '<span class="text-muted">-</span>';
+                    
+                    if (status) {
+                        let badgeClass = 'bg-secondary';
+                        if(status === 'มา') badgeClass = 'bg-success';
+                        else if(status === 'ลา') badgeClass = 'bg-warning text-dark';
+                        else if(status === 'ขาด') badgeClass = 'bg-danger';
+                        else if(status === 'สาย') badgeClass = 'bg-info text-dark';
+                        
+                        badge = `<span class="badge rounded-pill ${badgeClass}">${status}</span>`;
+                    }
+                    rowHTML += `<td class="text-center">${badge}</td>`;
+                });
+
+                // คอลัมน์สรุปยอดรวมท้ายตาราง
+                rowHTML += `
+                    <td class="text-center" style="font-size: 0.85rem;">
+                        <span class="text-success fw-bold me-1" title="มา">ม:${student.summary['มา']}</span> 
+                        <span class="text-warning text-dark fw-bold me-1" title="ลา">ล:${student.summary['ลา']}</span> 
+                        <span class="text-danger fw-bold me-1" title="ขาด">ข:${student.summary['ขาด']}</span> 
+                        <span class="text-info text-dark fw-bold" title="สาย">ส:${student.summary['สาย']}</span>
+                    </td>
+                `;
+
+                tr.innerHTML = rowHTML;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function resetFilters() {
+            const today = new Date();
+            const pastWeek = new Date();
+            pastWeek.setDate(today.getDate() - 7);
+
+            document.getElementById('filterMonth').value = "";
+            document.getElementById('filterStartDate').value = pastWeek.toISOString().split('T')[0];
+            document.getElementById('filterEndDate').value = today.toISOString().split('T')[0];
+            
+            if (currentUser && currentUser.role !== 'ครูที่ปรึกษา') {
+                document.getElementById('filterClass').value = "";
+            }
+            applyFilter();
+        }
+
+        // ==========================================
+        // Print / PDF Export Function
+        // ==========================================
+        function exportPDF() {
+            const printTitle = document.getElementById('printTitle');
+            const className = document.getElementById('filterClass').value || 'รวมทุกระดับชั้น';
+            const monthVal = document.getElementById('filterMonth').value;
+            
+            // สร้างข้อความหัวกระดาษ
+            let titleText = `รายงานสรุปการเข้าร่วมกิจกรรมหน้าเสาธง`;
+            if (monthVal) {
+                const [year, month] = monthVal.split('-');
+                titleText += ` ประจำเดือน ${thaiMonthsFull[parseInt(month)-1]} ${parseInt(year)+543}`;
+            } else {
+                const startDate = document.getElementById('filterStartDate').value;
+                const endDate = document.getElementById('filterEndDate').value;
+                
+                const formatThaiDate = (dateStr) => {
+                    if(!dateStr) return '';
+                    const parts = dateStr.split('-');
+                    return `${parseInt(parts[2])} ${thaiMonthsShort[parseInt(parts[1])-1]} ${parseInt(parts[0])+543}`;
+                };
+                
+                titleText += ` (${formatThaiDate(startDate)} ถึง ${formatThaiDate(endDate)})`;
+            }
+            
+            let subtitleText = `<div style="font-size:1.1rem; color:#666; margin-top: 5px;">ชั้น: ${className} | โรงเรียนขัวเรียงศึกษา</div>`;
+            printTitle.innerHTML = `<h4 class="text-center fw-bold mb-3">${titleText}${subtitleText}</h4>`;
+            
+            // แสดงหัวกระดาษ
+            printTitle.style.display = 'block';
+
+            // เรียกคำสั่ง Print ของ Browser
+            window.print();
+
+            // ซ่อนหัวกระดาษกลับเมื่อสั่ง Print เสร็จ
+            setTimeout(() => {
+                printTitle.style.display = 'none';
+            }, 1000);
+        }
+
+        // ==========================================
+        // Parent Settings Functions
+        // ==========================================
+        async function submitParentToken() {
+            const uidVal = document.getElementById('lineUidInput').value.trim();
+            
+            if (!uidVal) {
+                showMessage('warning', 'กรุณากรอกข้อมูล', 'กรุณาวาง LINE User ID ก่อนกดบันทึก');
+                return;
+            }
+
+            const childId = currentUser.childId;
+            if (!childId) {
+                showMessage('error', 'ข้อผิดพลาด', 'ไม่พบข้อมูลบุตรหลานที่เชื่อมโยงกับบัญชีของท่าน');
+                return;
+            }
+
+            showLoading("กำลังบันทึกข้อมูล...");
+
+            if (SCRIPT_URL !== "") {
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action: 'saveParentToken', 
+                            studentId: childId,
+                            token: uidVal // ส่งไปยัง Backend ในตัวแปรชื่อเดิม (token) เพื่อให้ Backend ยังทำงานได้
+                        })
+                    });
+                    
+                    const text = await response.text();
+                    if (text.includes("<html") || text.includes("<body")) {
+                        throw new Error("Permission Denied");
+                    }
+                    const result = JSON.parse(text);
+                    
+                    hideLoading();
+                    if(result.status === 'success') {
+                        showMessage('success', 'บันทึกสำเร็จ', 'บันทึก User ID ของท่านเรียบร้อยแล้ว ระบบจะส่งการแจ้งเตือนไปยัง LINE ของท่าน');
+                        document.getElementById('lineUidInput').value = "";
+                    } else {
+                        throw new Error(result.message);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    hideLoading();
+                    showMessage('error', 'เกิดข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลลงระบบได้');
+                }
+            } else {
+                setTimeout(() => {
+                    hideLoading();
+                    showMessage('success', 'จำลองการบันทึกสำเร็จ', 'บันทึก User ID จำลองเรียบร้อยแล้ว (จำเป็นต้องเชื่อมต่อ Google Sheet เพื่อใช้งานจริง)');
+                    document.getElementById('lineUidInput').value = "";
+                }, 800);
+            }
+        }
+    </script>
+</body>
+</html>
