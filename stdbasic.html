@@ -149,9 +149,10 @@
         <nav class="navbar navbar-expand-lg navbar-dark bg-primary-theme shadow-sm mb-4">
             <div class="container">
                 <a class="navbar-brand fw-bold" href="#"><i class="fas fa-school me-2"></i>ระบบประวัตินักเรียน</a>
+                <!-- แก้ไขส่วนนี้ให้แสดงผลบนมือถือได้ (เอา d-none d-md-inline ออก) -->
                 <div class="d-flex align-items-center">
-                    <span class="text-white me-3 d-none d-md-inline" id="display-user-id">ผู้ใช้งาน: -</span>
-                    <button class="btn btn-outline-light btn-sm" onclick="logout()">
+                    <span class="text-white me-2 mb-0 small text-truncate" style="max-width: 180px;" id="display-user-id">ผู้ใช้งาน: -</span>
+                    <button class="btn btn-outline-light btn-sm text-nowrap" onclick="logout()">
                         <i class="fas fa-sign-out-alt me-1"></i> ออกจากระบบ
                     </button>
                 </div>
@@ -360,7 +361,7 @@
     <script>
         // === การตั้งค่า Google Apps Script Web App URL ===
         // นำ URL ที่ได้จากการ Deploy Google Apps Script มาใส่ในช่องว่างด้านล่างนี้
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxN6sCHNCKVuvdeRIu5sGiEftegF7BbI3BVmeDzRESiL-evbNWjiIfWmMJxBnA4ZT4EWA/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby6IrECF84R5zFCiJfFnyPb-jOabcfvCjA9EWyvW1t7_CYUWYZyD6mmReFpwCzeBzWxzg/exec'; 
         
         let currentStudentId = '';
         let mockStorage = {}; // ใช้สำหรับจำลองระบบกรณีที่ยังไม่ได้ใส่ GAS_URL
@@ -483,6 +484,8 @@
                     document.getElementById('username').value = '';
                     document.getElementById('password').value = '';
                     
+                    document.getElementById('display-user-id').innerText = 'ผู้ใช้งาน: -';
+                    
                     document.getElementById('dashboard-page').classList.remove('active');
                     document.getElementById('login-page').classList.add('active');
                 }
@@ -521,6 +524,12 @@
                 const result = await response.json();
                 if(result.status === 'success' && result.data) {
                     populateForm(result.data); // ดึงข้อมูลเต็มมาเขียนทับ
+                    
+                    // เพิ่มการอัปเดตชื่อผู้ใช้บนแถบ Navbar อีกรอบ (ใช้ข้อมูลล่าสุดจากฐานข้อมูลหลัก)
+                    let dFName = result.data.firstName || document.getElementById('firstName').value || '';
+                    let dLName = result.data.lastName || document.getElementById('lastName').value || '';
+                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} ${dFName} ${dLName}`.trim();
+
                     Swal.fire('เข้าสู่ระบบสำเร็จ', 'ระบบได้ดึงข้อมูลส่วนตัวของคุณขึ้นมาแล้ว', 'success');
                 } else {
                     Swal.fire('เข้าสู่ระบบสำเร็จ', 'ระบบได้ดึงข้อมูลพื้นฐานมาให้แล้ว กรุณากรอกข้อมูลส่วนอื่นให้ครบถ้วน', 'info');
@@ -575,6 +584,7 @@
             if(!GAS_URL) {
                 setTimeout(() => {
                     mockStorage[currentStudentId] = studentData;
+                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} ${studentData.firstName} ${studentData.lastName}`;
                     hideLoader();
                     Swal.fire({
                         title: 'บันทึกข้อมูลสำเร็จ!',
@@ -601,6 +611,9 @@
                 hideLoader();
                 
                 if(result.status === 'success') {
+                    // อัปเดตชื่อผู้ใช้บน Navbar เมื่อบันทึกสำเร็จ
+                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} ${studentData.firstName} ${studentData.lastName}`.trim();
+                    
                     Swal.fire({
                         title: 'บันทึกข้อมูลสำเร็จ!',
                         text: 'ข้อมูลของคุณถูกบันทึกลงในฐานข้อมูลเรียบร้อยแล้ว',
