@@ -131,7 +131,7 @@
                                     <span class="input-group-text"><i class="fas fa-lock"></i></span>
                                     <input type="password" class="form-control" id="password" placeholder="กรอกรหัสผ่าน" required>
                                 </div>
-                                <div class="form-text mt-2"><i class="fas fa-info-circle"></i> ใช้รหัสประจำตัวนักเรียนเป็นรหัสผ่าน</div>
+                                <div class="form-text mt-2"><i class="fas fa-info-circle"></i> ตรวจสอบข้อมูลผู้ใช้จากฐานข้อมูลของโรงเรียน</div>
                             </div>
                             <button type="submit" class="btn btn-primary-theme w-100 py-2 fw-bold">
                                 <i class="fas fa-sign-in-alt me-2"></i> เข้าสู่ระบบ
@@ -360,31 +360,69 @@
     <script>
         // === การตั้งค่า Google Apps Script Web App URL ===
         // นำ URL ที่ได้จากการ Deploy Google Apps Script มาใส่ในช่องว่างด้านล่างนี้
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycby3Fuum1k-eU_OxZaL54a3yT0ZOaEMZHHiZpoeJxc6BqyHbwr4AvOk7KXpYM2fozE14Pg/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbztB1CGJ-3i_tq2FSqilohwGkbwwLaTkMVhfxnjowsWMtJ84wNyAQSuyCrPLFRBUH25ag/exec'; 
         
         let currentStudentId = '';
         let mockStorage = {}; // ใช้สำหรับจำลองระบบกรณีที่ยังไม่ได้ใส่ GAS_URL
         let currentProfileBase64 = ''; // เพิ่มตัวแปรเก็บรูปภาพ
 
-        // ฟังก์ชันเข้าสู่ระบบ
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        // ฟังก์ชันเข้าสู่ระบบ (อัปเดตเพื่อตรวจสอบกับ Google Sheet)
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const user = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value.trim();
 
-            // เงื่อนไข: Username และ Password ต้องตรงกัน (ใช้รหัส นร. เป็นพาสเวิร์ด)
-            if(user === pass && user !== '') {
-                currentStudentId = user;
-                document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId}`;
+            if(!user || !pass) return;
+
+            showLoader();
+
+            // กรณีที่ยังไม่ได้เชื่อมต่อ Google Sheet ให้จำลองการล็อกอิน
+            if(!GAS_URL) {
+                setTimeout(() => {
+                    hideLoader();
+                    if(user === pass) { // จำลองโหมดทดสอบ ให้กรอกรหัสผ่านเดียวกับรหัสผู้ใช้งาน
+                        currentStudentId = user;
+                        document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId}`;
+                        document.getElementById('login-page').classList.remove('active');
+                        document.getElementById('dashboard-page').classList.add('active');
+                        fetchData(currentStudentId);
+                    } else {
+                        Swal.fire('ข้อผิดพลาด!', 'รหัสประจำตัวหรือรหัสผ่านไม่ถูกต้อง (โหมดทดลอง: กรอกให้เหมือนกันทั้งคู่)', 'error');
+                    }
+                }, 800);
+                return;
+            }
+
+            // ถ้ามี GAS_URL ให้ส่งไปตรวจสอบที่ Google Sheet
+            try {
+                let formData = new URLSearchParams();
+                formData.append('action', 'login');
+                formData.append('username', user);
+                formData.append('password', pass);
+
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                // สลับหน้าจอ
-                document.getElementById('login-page').classList.remove('active');
-                document.getElementById('dashboard-page').classList.add('active');
-                
-                // โหลดข้อมูลเก่า (ถ้ามี)
-                fetchData(currentStudentId);
-            } else {
-                Swal.fire('ข้อผิดพลาด!', 'รหัสประจำตัวหรือรหัสผ่านไม่ถูกต้อง (ใช้รหัสประจำตัวเป็นรหัสผ่าน)', 'error');
+                const result = await response.json();
+                hideLoader();
+
+                if(result.status === 'success') {
+                    currentStudentId = user;
+                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId}`;
+                    document.getElementById('login-page').classList.remove('active');
+                    document.getElementById('dashboard-page').classList.add('active');
+                    
+                    // เมื่อล็อกอินผ่าน ให้ดึงข้อมูลประวัติเดิมมาแสดงด้วย
+                    fetchData(currentStudentId);
+                } else {
+                    Swal.fire('การเข้าสู่ระบบล้มเหลว', 'รหัสประจำตัวหรือรหัสผ่านไม่ถูกต้อง', 'error');
+                }
+            } catch (error) {
+                hideLoader();
+                console.error('Error:', error);
+                Swal.fire('ข้อผิดพลาด!', 'ไม่สามารถเชื่อมต่อฐานข้อมูลได้', 'error');
             }
         });
 
@@ -465,7 +503,9 @@
                 const result = await response.json();
                 if(result.status === 'success' && result.data) {
                     populateForm(result.data);
-                    Swal.fire('โหลดข้อมูลสำเร็จ', 'ดึงข้อมูลล่าสุดเรียบร้อยแล้ว', 'success');
+                    Swal.fire('เข้าสู่ระบบสำเร็จ', 'ระบบได้ดึงข้อมูลส่วนตัวของคุณขึ้นมาแล้ว', 'success');
+                } else {
+                    Swal.fire('เข้าสู่ระบบสำเร็จ', 'กรุณากรอกข้อมูลประวัติส่วนตัวของคุณให้ครบถ้วน', 'info');
                 }
             } catch (error) {
                 console.error('Error:', error);
