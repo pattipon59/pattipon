@@ -360,13 +360,13 @@
     <script>
         // === การตั้งค่า Google Apps Script Web App URL ===
         // นำ URL ที่ได้จากการ Deploy Google Apps Script มาใส่ในช่องว่างด้านล่างนี้
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyyqxZiiax7xP7H2xISKdIwkhkfc5KA6zDncnT0iAN7TLOB_cH8mQugwCdF392IQrf6fw/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzM7u7kSgdpUY-c39doiOoMITrJ-Dn5T0zZ7FeP6ylP1OPK9tOoIocb3PnTIBHoYjr-EQ/exec'; 
         
         let currentStudentId = '';
         let mockStorage = {}; // ใช้สำหรับจำลองระบบกรณีที่ยังไม่ได้ใส่ GAS_URL
         let currentProfileBase64 = ''; // เพิ่มตัวแปรเก็บรูปภาพ
 
-        // ฟังก์ชันเข้าสู่ระบบ (อัปเดตเพื่อตรวจสอบกับ Google Sheet)
+        // ฟังก์ชันเข้าสู่ระบบ (อัปเดตเพื่อตรวจสอบกับ Google Sheet พร้อมดึงข้อมูลผู้ใช้)
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const user = document.getElementById('username').value.trim();
@@ -383,6 +383,12 @@
                     if(user === pass) { // จำลองโหมดทดสอบ ให้กรอกรหัสผ่านเดียวกับรหัสผู้ใช้งาน
                         currentStudentId = user;
                         document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId}`;
+                        
+                        // จำลองการดึงข้อมูลพื้นฐานมาแสดง
+                        document.getElementById('prefix').value = 'ด.ช.';
+                        document.getElementById('firstName').value = 'สมมติ';
+                        document.getElementById('lastName').value = 'ทดสอบระบบ';
+
                         document.getElementById('login-page').classList.remove('active');
                         document.getElementById('dashboard-page').classList.add('active');
                         fetchData(currentStudentId);
@@ -410,11 +416,19 @@
 
                 if(result.status === 'success') {
                     currentStudentId = user;
-                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId}`;
+
+                    // นำข้อมูลที่ได้จาก Sheet Users มาใส่ในฟอร์มล่วงหน้า
+                    if (result.userData) {
+                        document.getElementById('prefix').value = result.userData.prefix || '';
+                        document.getElementById('firstName').value = result.userData.firstName || '';
+                        document.getElementById('lastName').value = result.userData.lastName || '';
+                    }
+
+                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} ${result.userData && result.userData.firstName ? '('+result.userData.firstName+')' : ''}`;
                     document.getElementById('login-page').classList.remove('active');
                     document.getElementById('dashboard-page').classList.add('active');
                     
-                    // เมื่อล็อกอินผ่าน ให้ดึงข้อมูลประวัติเดิมมาแสดงด้วย
+                    // เมื่อล็อกอินผ่าน ให้ดึงข้อมูลประวัติเดิมมาแสดงด้วย (ถ้าเคยบันทึกแล้วจะเขียนทับข้อมูลพื้นฐาน)
                     fetchData(currentStudentId);
                 } else {
                     Swal.fire('การเข้าสู่ระบบล้มเหลว', 'รหัสประจำตัวหรือรหัสผ่านไม่ถูกต้อง', 'error');
@@ -483,7 +497,7 @@
                         populateForm(mockStorage[studentId]);
                         Swal.fire('โหลดข้อมูลสำเร็จ', 'ดึงข้อมูลที่เคยบันทึกไว้เรียบร้อยแล้ว', 'success');
                     } else {
-                        Swal.fire('ยินดีต้อนรับ', 'กรุณากรอกข้อมูลส่วนตัวของคุณให้ครบถ้วน', 'info');
+                        Swal.fire('ยินดีต้อนรับ', 'กรุณากรอกข้อมูลส่วนตัวเพิ่มเติมให้ครบถ้วน', 'info');
                     }
                 }, 800);
                 return;
@@ -502,10 +516,10 @@
                 
                 const result = await response.json();
                 if(result.status === 'success' && result.data) {
-                    populateForm(result.data);
+                    populateForm(result.data); // ดึงข้อมูลเต็มมาเขียนทับ
                     Swal.fire('เข้าสู่ระบบสำเร็จ', 'ระบบได้ดึงข้อมูลส่วนตัวของคุณขึ้นมาแล้ว', 'success');
                 } else {
-                    Swal.fire('เข้าสู่ระบบสำเร็จ', 'กรุณากรอกข้อมูลประวัติส่วนตัวของคุณให้ครบถ้วน', 'info');
+                    Swal.fire('เข้าสู่ระบบสำเร็จ', 'ระบบได้ดึงข้อมูลพื้นฐานมาให้แล้ว กรุณากรอกข้อมูลส่วนอื่นให้ครบถ้วน', 'info');
                 }
             } catch (error) {
                 console.error('Error:', error);
