@@ -360,7 +360,7 @@
     <script>
         // === การตั้งค่า Google Apps Script Web App URL ===
         // นำ URL ที่ได้จากการ Deploy Google Apps Script มาใส่ในช่องว่างด้านล่างนี้
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzM7u7kSgdpUY-c39doiOoMITrJ-Dn5T0zZ7FeP6ylP1OPK9tOoIocb3PnTIBHoYjr-EQ/exec'; 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbztB1CGJ-3i_tq2FSqilohwGkbwwLaTkMVhfxnjowsWMtJ84wNyAQSuyCrPLFRBUH25ag/exec'; 
         
         let currentStudentId = '';
         let mockStorage = {}; // ใช้สำหรับจำลองระบบกรณีที่ยังไม่ได้ใส่ GAS_URL
@@ -382,12 +382,13 @@
                     hideLoader();
                     if(user === pass) { // จำลองโหมดทดสอบ ให้กรอกรหัสผ่านเดียวกับรหัสผู้ใช้งาน
                         currentStudentId = user;
-                        document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId}`;
                         
                         // จำลองการดึงข้อมูลพื้นฐานมาแสดง
                         document.getElementById('prefix').value = 'ด.ช.';
                         document.getElementById('firstName').value = 'สมมติ';
                         document.getElementById('lastName').value = 'ทดสอบระบบ';
+
+                        document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} สมมติ ทดสอบระบบ`;
 
                         document.getElementById('login-page').classList.remove('active');
                         document.getElementById('dashboard-page').classList.add('active');
@@ -424,7 +425,10 @@
                         document.getElementById('lastName').value = result.userData.lastName || '';
                     }
 
-                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} ${result.userData && result.userData.firstName ? '('+result.userData.firstName+')' : ''}`;
+                    let dFName = result.userData && result.userData.firstName ? result.userData.firstName : '';
+                    let dLName = result.userData && result.userData.lastName ? result.userData.lastName : '';
+                    document.getElementById('display-user-id').innerText = `ผู้ใช้งาน: ${currentStudentId} ${dFName} ${dLName}`.trim();
+                    
                     document.getElementById('login-page').classList.remove('active');
                     document.getElementById('dashboard-page').classList.add('active');
                     
