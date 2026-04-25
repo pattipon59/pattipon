@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบสมัครเข้าร่วมอบรม</title>
+    
+    <!-- Google Fonts: Sarabun -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-blue: #0d6efd;
+            --dark-blue: #0a4275;
+            --light-blue: #e7f1ff;
+            --bg-color: #f4f7f6;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+        }
+
+        .navbar {
+            background-color: var(--dark-blue) !important;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .card-header {
+            background-color: var(--primary-blue);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--dark-blue);
+            border-color: var(--dark-blue);
+            transform: translateY(-2px);
+        }
+
+        .form-control, .form-select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ced4da;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        /* Loading Spinner Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-blue);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .text-primary-custom {
+            color: var(--primary-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loading Spinner -->
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner-border mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="text-primary-custom fw-bold">กำลังประมวลผล...</h5>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-graduation-cap me-2"></i>ระบบสมัครอบรมออนไลน์</a>
+            <div id="user-nav" class="hidden">
+                <span class="text-white me-3" id="display-user-name"></span>
+                <button class="btn btn-sm btn-outline-light me-2" id="btn-edit-profile" onclick="showEditProfile()"><i class="fa-solid fa-user-edit me-1"></i>แก้ไขข้อมูล</button>
+                <button class="btn btn-sm btn-outline-light" onclick="logout()"><i class="fa-solid fa-sign-out-alt me-1"></i>ออกจากระบบ</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Section: Login -->
+        <div id="login-section" class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="fa-solid fa-right-to-bracket me-2"></i>เข้าสู่ระบบ</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="login-form">
+                            <div class="mb-3">
+                                <label class="form-label">อีเมล</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="login-email" required placeholder="example@email.com">
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">รหัสผ่าน</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                                    <input type="password" class="form-control" id="login-password" required placeholder="รหัสผ่านของคุณ">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 mb-2">เข้าสู่ระบบ</button>
+                            <div class="text-center mb-3">
+                                <a href="#" class="text-decoration-none text-muted" style="font-size: 0.9em;" onclick="toggleView('forgot-password-section')"><i class="fa-solid fa-key me-1"></i>ลืมรหัสผ่าน?</a>
+                            </div>
+                            <div class="text-center border-top pt-3">
+                                <span>ยังไม่มีบัญชี? </span>
+                                <a href="#" class="text-decoration-none fw-bold" onclick="toggleView('register-section')">สมัครสมาชิก</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Forgot Password -->
+        <div id="forgot-password-section" class="row justify-content-center hidden">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header bg-warning text-dark" style="border-radius: 15px 15px 0 0;">
+                        <h4 class="mb-0"><i class="fa-solid fa-unlock-keyhole me-2"></i>กู้คืนรหัสผ่าน</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="text-muted text-center mb-4" style="font-size: 0.95em;">กรุณากรอกอีเมลที่ใช้สมัครสมาชิก ระบบจะส่งรหัสผ่านไปยังอีเมลของคุณ</p>
+                        <form id="forgot-password-form">
+                            <div class="mb-4">
+                                <label class="form-label">อีเมล</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                                    <input type="email" class="form-control" id="forgot-email" required placeholder="example@email.com">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100 mb-3 fw-bold text-dark">ส่งรหัสผ่านเข้าอีเมล</button>
+                            <div class="text-center">
+                                <a href="#" class="text-decoration-none fw-bold text-secondary" onclick="toggleView('login-section')"><i class="fa-solid fa-arrow-left me-1"></i>กลับไปหน้าเข้าสู่ระบบ</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Register (Member) -->
+        <div id="register-section" class="row justify-content-center hidden">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="fa-solid fa-user-plus me-2"></i>สมัครสมาชิกใหม่</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="register-form">
+                            <div class="mb-3">
+                                <label class="form-label">ชื่อ - นามสกุล <span class="text-muted" style="font-size: 0.9em;">(ใส่คำนำหน้าด้วย)</span></label>
+                                <input type="text" class="form-control" id="reg-name" required placeholder="ระบุคำนำหน้า ชื่อ-นามสกุล">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">ตำแหน่ง <span class="text-danger">*</span></label>
+                                <select class="form-select" id="reg-position" required>
+                                    <option value="" selected disabled>-- กรุณาเลือกตำแหน่ง --</option>
+                                    <option value="ครูผู้สอน">ครูผู้สอน</option>
+                                    <option value="รองผู้อำนวยการสถานศึกษา">รองผู้อำนวยการสถานศึกษา</option>
+                                    <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
+                                    <option value="ศึกษานิเทศก์">ศึกษานิเทศก์</option>
+                                    <option value="รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา">รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา</option>
+                                    <option value="ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา">ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา</option>
+                                    <option value="อื่นๆ">อื่นๆ</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">วิทยฐานะ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="reg-academic-title" required>
+                                    <option value="" selected disabled>-- กรุณาเลือกวิทยฐานะ --</option>
+                                    <option value="ไม่มีวิทยฐานะ">ไม่มีวิทยฐานะ</option>
+                                    <option value="ชำนาญการ">ชำนาญการ</option>
+                                    <option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option>
+                                    <option value="เชี่ยวชาญ">เชี่ยวชาญ</option>
+                                    <option value="เชี่ยวชาญพิเศษ">เชี่ยวชาญพิเศษ</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">โรงเรียน <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="reg-school" required placeholder="ระบุชื่อโรงเรียน">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">สหวิทยาเขต <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="reg-campus" required>
+                                        <option value="" selected disabled>-- กรุณาเลือกสหวิทยาเขต --</option>
+                                        <option value="เมืองขอนแก่น">เมืองขอนแก่น</option>
+                                        <option value="แก่นนครราชพฤกษ์">แก่นนครราชพฤกษ์</option>
+                                        <option value="กัลยาณมิตร">กัลยาณมิตร</option>
+                                        <option value="ปราสาทพญาไผ่">ปราสาทพญาไผ่</option>
+                                        <option value="อุดมคงคาคีรี">อุดมคงคาคีรี</option>
+                                        <option value="หนองสองห้อง–พล">หนองสองห้อง–พล</option>
+                                        <option value="แวงศิลาทอง">แวงศิลาทอง</option>
+                                        <option value="พระธาตุขามแก่น">พระธาตุขามแก่น</option>
+                                        <option value="น้ำพอง-กระนวน">น้ำพอง-กระนวน</option>
+                                        <option value="เวียงเรือคำ">เวียงเรือคำ</option>
+                                        <option value="ชุมแพม่านชมพู">ชุมแพม่านชมพู</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="reg-phone" required placeholder="08xxxxxxxx">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">อีเมล</label>
+                                <input type="email" class="form-control" id="reg-email" required placeholder="example@email.com">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">รหัสผ่าน</label>
+                                <input type="password" class="form-control" id="reg-password" required minlength="6" placeholder="ตั้งรหัสผ่านอย่างน้อย 6 ตัวอักษร">
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 mb-3">ลงทะเบียนสมาชิก</button>
+                            <div class="text-center">
+                                <span>มีบัญชีอยู่แล้ว? </span>
+                                <a href="#" class="text-decoration-none fw-bold" onclick="toggleView('login-section')">เข้าสู่ระบบ</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Admin Dashboard (เจ้าหน้าที่) -->
+        <div id="admin-dashboard-section" class="row justify-content-center hidden">
+            <div class="col-md-12">
+                
+                <!-- System Settings Card -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-secondary text-white fw-bold">
+                        <i class="fa-solid fa-cogs me-2"></i>ตั้งค่าระบบ (System Settings)
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row text-center">
+                            <div class="col-md-6 border-end">
+                                <h5 class="mb-3">เมนูประเมินความพึงพอใจ</h5>
+                                <div class="form-check form-switch d-flex justify-content-center fs-4">
+                                    <input class="form-check-input" type="checkbox" id="toggle-assessment" onchange="updateSystemSettings()">
+                                </div>
+                                <label class="mt-2 text-muted" id="label-assessment-status">กำลังโหลด...</label>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-3">เมนูเกียรติบัตร</h5>
+                                <div class="form-check form-switch d-flex justify-content-center fs-4">
+                                    <input class="form-check-input" type="checkbox" id="toggle-certificate" onchange="updateSystemSettings()">
+                                </div>
+                                <label class="mt-2 text-muted" id="label-certificate-status">กำลังโหลด...</label>
+                            </div>
+                        </div>
+
+                        <!-- เพิ่มส่วนตั้งค่าคำถามแบบประเมิน -->
+                        <div class="row mt-4 pt-3 border-top text-start">
+                            <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-pen-to-square me-2"></i>ตั้งค่าคำถามแบบประเมินความพึงพอใจ</h5>
+                                <div class="input-group w-auto">
+                                    <span class="input-group-text">จำนวนข้อ</span>
+                                    <input type="number" id="num-questions" class="form-control text-center" min="1" max="20" style="width: 80px;" value="3">
+                                    <button class="btn btn-outline-primary" type="button" onclick="generateQuestionInputs()">สร้างฟอร์ม</button>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div id="admin-questions-container" class="row">
+                                    <!-- คำถามจะถูกสร้างที่นี่อัตโนมัติ -->
+                                </div>
+                                <div class="text-end mt-2">
+                                    <button class="btn btn-primary" onclick="updateSystemSettings()"><i class="fa-solid fa-save me-2"></i>บันทึกคำถาม</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- เพิ่มส่วนอัปโหลดเทมเพลตเกียรติบัตร -->
+                        <div class="row mt-4 pt-3 border-top text-start">
+                            <div class="col-12 d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-bold mb-0"><i class="fa-solid fa-file-image me-2"></i>ตั้งค่าเทมเพลตเกียรติบัตร (ระบบพิมพ์ชื่ออัตโนมัติ)</h5>
+                            </div>
+                            <div class="col-md-8 mb-2">
+                                <input type="file" class="form-control" id="admin-cert-template" accept="image/png, image/jpeg, image/jpg">
+                                <div class="form-text text-muted">รองรับไฟล์รูปภาพ (JPG, PNG) เท่านั้น เพื่อให้ระบบสามารถวาดชื่อทับได้ (ขนาดไม่เกิน 5MB)</div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <button class="btn btn-primary w-100" onclick="uploadCertTemplate()"><i class="fa-solid fa-upload me-2"></i>อัปโหลดเทมเพลต</button>
+                            </div>
+                            
+                            <div class="col-12 mt-3">
+                                <div class="row bg-light p-3 rounded border mx-0">
+                                    <div class="col-12 mb-2 fw-bold text-dark"><i class="fa-solid fa-text-height me-2"></i>ตั้งค่าตำแหน่งการพิมพ์ชื่อลงบนเกียรติบัตร</div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label text-muted" style="font-size:0.9em;">ขนาดตัวอักษร (px)</label>
+                                        <input type="number" id="cert-font-size" class="form-control" value="60" onchange="updateSystemSettings()">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label text-muted" style="font-size:0.9em;">สีตัวอักษร</label>
+                                        <input type="color" id="cert-font-color" class="form-control form-control-color w-100" value="#000000" onchange="updateSystemSettings()">
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label text-muted" style="font-size:0.9em;">ตำแหน่งแนวตั้ง (% จากขอบบน)</label>
+                                        <input type="number" id="cert-y-pos" class="form-control" value="50" onchange="updateSystemSettings()">
+                                    </div>
+                                    <div class="col-12 text-center mt-3">
+                                        <button class="btn btn-sm btn-outline-info shadow-sm" onclick="previewCertificateAdmin()"><i class="fa-solid fa-eye me-1"></i> ดูตัวอย่างการวางชื่อบนเกียรติบัตร</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 mt-3">
+                                <div id="current-template-info" class="text-muted" style="font-size: 0.9em;">
+                                    <i class="fa-solid fa-circle-xmark text-danger me-1"></i> ยังไม่มีเทมเพลตในระบบ
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- แบบจำลอง (Preview) แบบประเมินสำหรับ Admin -->
+                <div class="card shadow-sm mb-4" id="admin-assessment-preview-card">
+                    <div class="card-header bg-success text-white fw-bold" style="border-radius: 15px 15px 0 0;">
+                        <i class="fa-solid fa-eye me-2"></i>ตัวอย่างแบบประเมินความพึงพอใจ (Preview)
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="alert alert-light border border-success border-start border-5 mb-4">
+                            <strong>คำชี้แจง:</strong> โปรดเลือกระดับความพึงพอใจที่ตรงกับความคิดเห็นท่านมากที่สุด (5 = มากที่สุด, 1 = น้อยที่สุด)
+                        </div>
+                        <form id="admin-preview-form" onsubmit="event.preventDefault(); Swal.fire('โหมดตัวอย่าง','นี่คือหน้าจอจำลองสำหรับดูตัวอย่างเท่านั้น ไม่สามารถส่งข้อมูลจริงได้','info');">
+                            <div id="admin-preview-dynamic-questions">
+                                <!-- คำถามตัวอย่างจะแสดงที่นี่ -->
+                            </div>
+                            <div class="mb-4 mt-4">
+                                <label class="form-label fw-bold">ข้อเสนอแนะเพิ่มเติม</label>
+                                <textarea class="form-control" rows="3" placeholder="ระบุข้อเสนอแนะเพิ่มเติม..." disabled></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100 btn-lg"><i class="fa-solid fa-paper-plane me-2"></i>ส่งแบบประเมิน (จำลอง)</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white" style="border-radius: 15px 15px 0 0;">
+                        <h4 class="mb-0"><i class="fa-solid fa-user-shield me-2"></i>ระบบจัดการสำหรับเจ้าหน้าที่ (Admin)</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">รายชื่อผู้สมัครเข้าร่วมอบรม</h5>
+                            <button class="btn btn-sm btn-outline-primary" onclick="loadAdminData()"><i class="fa-solid fa-rotate-right me-1"></i>รีเฟรชข้อมูล</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered align-middle text-center">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>ชื่อ-นามสกุล</th>
+                                        <th>โรงเรียน</th>
+                                        <th>เบอร์โทรศัพท์</th>
+                                        <th>หลักฐานการชำระเงิน</th>
+                                        <th>สถานะ</th>
+                                        <th>จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-table-body">
+                                    <!-- ข้อมูลจำลอง / ข้อมูลจริง จะถูกนำมาแสดงที่นี่ -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Dashboard / Training Registration (ผู้ใช้งานทั่วไป) -->
+        <div id="dashboard-section" class="row justify-content-center hidden">
+            <div class="col-md-8">
+                
+                <div class="alert alert-info border-0 shadow-sm mb-4" role="alert" style="background-color: var(--light-blue); color: var(--dark-blue);">
+                    <i class="fa-solid fa-circle-info me-2"></i> ยินดีต้อนรับคุณ <strong id="welcome-name"></strong> กรุณาเลือกเมนูที่ต้องการ
+                </div>
+
+                <!-- Dashboard Menu Tabs -->
+                <ul class="nav nav-pills nav-justified mb-4 shadow-sm rounded bg-white p-2" id="dashboard-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-bold" id="tab-register" data-bs-toggle="pill" data-bs-target="#pane-register" type="button" role="tab"><i class="fa-solid fa-file-signature me-2"></i>สมัครอบรม</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link disabled fw-bold" id="tab-assessment" data-bs-toggle="pill" data-bs-target="#pane-assessment" type="button" role="tab"><i class="fa-solid fa-clipboard-list me-2"></i>ประเมินความพึงพอใจ</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link disabled fw-bold" id="tab-certificate" data-bs-toggle="pill" data-bs-target="#pane-certificate" type="button" role="tab"><i class="fa-solid fa-award me-2"></i>เกียรติบัตร</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="dashboard-tabContent">
+                    <!-- Pane 1: Register Form -->
+                    <div class="tab-pane fade show active" id="pane-register" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="mb-0"><i class="fa-solid fa-file-signature me-2"></i>แบบฟอร์มสมัครเข้าร่วมอบรม</h4>
+                            </div>
+                            <div class="card-body p-4">
+                                
+                                <!-- สถานะ: รอการยืนยัน / ยืนยันแล้ว -->
+                                <div id="registration-status-container" class="hidden text-center py-5">
+                                    <i id="status-icon" class="fa-solid fa-clock text-warning mb-3" style="font-size: 5em;"></i>
+                                    <h3 id="status-title" class="fw-bold text-warning">รอการยืนยัน</h3>
+                                    <h5 id="status-desc" class="text-muted mt-3"><i class="fa-solid fa-hourglass-half me-2"></i>รอการตรวจสอบจากเจ้าหน้าที่</h5>
+                                </div>
+
+                                <!-- ฟอร์มสมัครอบรม -->
+                                <div id="training-form-container">
+                                    <form id="training-form">
+                                        <div class="mb-3">
+                                            <label class="form-label">ชื่อ - นามสกุล <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control bg-light" id="train-name" required readonly>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label">ตำแหน่ง <span class="text-danger">*</span></label>
+                                            <select class="form-select" id="train-position" required>
+                                                <option value="" selected disabled>-- กรุณาเลือกตำแหน่ง --</option>
+                                                <option value="ครูผู้สอน">ครูผู้สอน</option>
+                                                <option value="รองผู้อำนวยการสถานศึกษา">รองผู้อำนวยการสถานศึกษา</option>
+                                                <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
+                                                <option value="ศึกษานิเทศก์">ศึกษานิเทศก์</option>
+                                                <option value="รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา">รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา</option>
+                                                <option value="ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา">ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา</option>
+                                                <option value="อื่นๆ">อื่นๆ</option>
+                                            </select>
+                                        </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">โรงเรียน <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="train-school" required placeholder="ระบุชื่อโรงเรียน">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">สหวิทยาเขต <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="train-campus" required>
+                                        <option value="" selected disabled>-- กรุณาเลือกสหวิทยาเขต --</option>
+                                        <option value="เมืองขอนแก่น">เมืองขอนแก่น</option>
+                                        <option value="แก่นนครราชพฤกษ์">แก่นนครราชพฤกษ์</option>
+                                        <option value="กัลยาณมิตร">กัลยาณมิตร</option>
+                                        <option value="ปราสาทพญาไผ่">ปราสาทพญาไผ่</option>
+                                        <option value="อุดมคงคาคีรี">อุดมคงคาคีรี</option>
+                                        <option value="หนองสองห้อง–พล">หนองสองห้อง–พล</option>
+                                        <option value="แวงศิลาทอง">แวงศิลาทอง</option>
+                                        <option value="พระธาตุขามแก่น">พระธาตุขามแก่น</option>
+                                        <option value="น้ำพอง-กระนวน">น้ำพอง-กระนวน</option>
+                                        <option value="เวียงเรือคำ">เวียงเรือคำ</option>
+                                        <option value="ชุมแพม่านชมพู">ชุมแพม่านชมพู</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="train-phone" required placeholder="08xxxxxxxx">
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">หลักฐานการชำระเงิน <span class="text-muted" style="font-size: 0.9em;">(อัปโหลดภายหลังได้)</span></label>
+                                <input type="file" class="form-control" id="train-payment" accept="image/png, image/jpeg, image/jpg, application/pdf">
+                                <div class="form-text text-muted">รองรับไฟล์รูปภาพ (JPG, PNG) หรือ PDF (ขนาดไม่เกิน 5MB)</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">หมายเหตุ</label>
+                                <textarea class="form-control" id="train-remark" rows="2" placeholder="ระบุหมายเหตุเพิ่มเติม (ถ้ามี)"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 btn-lg"><i class="fa-solid fa-paper-plane me-2"></i>ยืนยันการสมัครอบรม</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- Pane 2: Assessment -->
+            <div class="tab-pane fade" id="pane-assessment" role="tabpanel">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white text-center" style="border-radius: 15px 15px 0 0;">
+                        <h4 class="mb-0"><i class="fa-solid fa-clipboard-list me-2"></i>แบบประเมินความพึงพอใจ</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        
+                        <!-- หน้าจอทำแบบประเมินสำเร็จแล้ว -->
+                        <div id="assessment-success-container" class="hidden text-center py-5">
+                            <i class="fa-solid fa-check-circle text-success mb-3" style="font-size: 5em;"></i>
+                            <h3 class="fw-bold text-success">ขอบคุณสำหรับคำประเมิน</h3>
+                            <p class="text-muted mt-2">ระบบบันทึกข้อมูลแบบประเมินความพึงพอใจของคุณเรียบร้อยแล้ว<br>คุณสามารถดำเนินการดาวน์โหลดเกียรติบัตรได้ที่เมนูถัดไป</p>
+                        </div>
+
+                        <!-- ฟอร์มแบบประเมิน -->
+                        <div id="assessment-form-container">
+                            <div class="alert alert-light border border-success border-start border-5 mb-4">
+                                <strong>คำชี้แจง:</strong> โปรดเลือกระดับความพึงพอใจที่ตรงกับความคิดเห็นท่านมากที่สุด (5 = มากที่สุด, 1 = น้อยที่สุด)
+                            </div>
+                            <form id="assessment-form">
+                                <div id="assessment-dynamic-questions">
+                                    <!-- คำถามประเมินจะถูกนำมาแสดงตรงนี้อัตโนมัติ -->
+                                </div>
+                                <div class="mb-4 mt-4">
+                                    <label class="form-label fw-bold">ข้อเสนอแนะเพิ่มเติม</label>
+                                    <textarea class="form-control" id="assess-suggestion" rows="3" placeholder="ระบุข้อเสนอแนะเพิ่มเติม..."></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-success w-100 btn-lg"><i class="fa-solid fa-paper-plane me-2"></i>ส่งแบบประเมิน</button>
+                            </form>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pane 3: Certificate -->
+            <div class="tab-pane fade" id="pane-certificate" role="tabpanel">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header text-white text-center" style="background-color: var(--dark-blue); border-radius: 15px 15px 0 0;">
+                        <h4 class="mb-0"><i class="fa-solid fa-award me-2"></i>ระบบรับเกียรติบัตร</h4>
+                    </div>
+                    <div class="card-body p-5 text-center">
+                        <i class="fa-solid fa-certificate text-primary mb-3" style="font-size: 4em;"></i>
+                        <h5 class="fw-bold">เกียรติบัตรของคุณ</h5>
+                        
+                        <div id="cert-warning-container">
+                            <p class="text-muted mb-4">ระบบจะเปิดให้ดาวน์โหลดเกียรติบัตร หลังจากที่คุณทำการประเมินความพึงพอใจเสร็จสิ้น</p>
+                            <div class="alert alert-warning d-inline-block text-start shadow-sm">
+                                <i class="fa-solid fa-triangle-exclamation me-2"></i><strong>กรุณาทำแบบประเมินความพึงพอใจ</strong><br>
+                                <span style="font-size:0.9em;">เพื่อปลดล็อกปุ่มดาวน์โหลดเกียรติบัตร</span>
+                            </div>
+                        </div>
+
+                        <!-- ปุ่มดาวน์โหลดจะแสดงเมื่อประเมินเสร็จ -->
+                        <button id="btn-download-cert" class="btn btn-primary btn-lg hidden mt-3 shadow-sm"><i class="fa-solid fa-download me-2"></i>ดาวน์โหลดเกียรติบัตรของฉัน (JPG)</button>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End tab-content -->
+    </div>
+</div>
+
+        <!-- Section: Edit Profile -->
+        <div id="edit-profile-section" class="row justify-content-center hidden">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white" style="border-radius: 15px 15px 0 0;">
+                        <h4 class="mb-0"><i class="fa-solid fa-user-pen me-2"></i>แก้ไขข้อมูลส่วนตัว</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="edit-profile-form">
+                            <div class="mb-3">
+                                <label class="form-label">อีเมล (ไม่อนุญาตให้แก้ไข)</label>
+                                <input type="email" class="form-control bg-light" id="edit-email" readonly>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ชื่อ - นามสกุล <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="edit-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ตำแหน่ง <span class="text-danger">*</span></label>
+                                <select class="form-select" id="edit-position" required>
+                                    <option value="" selected disabled>-- กรุณาเลือกตำแหน่ง --</option>
+                                    <option value="ครูผู้สอน">ครูผู้สอน</option>
+                                    <option value="รองผู้อำนวยการสถานศึกษา">รองผู้อำนวยการสถานศึกษา</option>
+                                    <option value="ผู้อำนวยการสถานศึกษา">ผู้อำนวยการสถานศึกษา</option>
+                                    <option value="ศึกษานิเทศก์">ศึกษานิเทศก์</option>
+                                    <option value="รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา">รองผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา</option>
+                                    <option value="ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา">ผู้อำนวยการสำนักงานเขตพื้นที่การศึกษา</option>
+                                    <option value="อื่นๆ">อื่นๆ</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">วิทยฐานะ <span class="text-danger">*</span></label>
+                                <select class="form-select" id="edit-academic-title" required>
+                                    <option value="" selected disabled>-- กรุณาเลือกวิทยฐานะ --</option>
+                                    <option value="ไม่มีวิทยฐานะ">ไม่มีวิทยฐานะ</option>
+                                    <option value="ชำนาญการ">ชำนาญการ</option>
+                                    <option value="ชำนาญการพิเศษ">ชำนาญการพิเศษ</option>
+                                    <option value="เชี่ยวชาญ">เชี่ยวชาญ</option>
+                                    <option value="เชี่ยวชาญพิเศษ">เชี่ยวชาญพิเศษ</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="edit-phone" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label">รหัสผ่านใหม่ <span class="text-muted" style="font-size: 0.9em;">(เว้นว่างไว้หากไม่ต้องการเปลี่ยน)</span></label>
+                                <input type="password" class="form-control" id="edit-password" minlength="6">
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" onclick="toggleView('dashboard-section')">ยกเลิก</button>
+                                <button type="submit" class="btn btn-success"><i class="fa-solid fa-save me-2"></i>บันทึกข้อมูล</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.css"></script>
+
+    <script>
+        // ==========================================
+        // ⚠️ นำ URL จาก Google Apps Script มาใส่ที่นี่
+        // ==========================================
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxE5mTAT0UIYNvv8oNjm7aU6XZ-6JNkDoAR4yia0fiyyun3fstQlWxTOh0DNpqv_V3O/exec"; // ปล่อยว่างไว้จะทำงานในโหมดจำลอง (Mock) เพื่อให้ดู UI ได้
+        
+        // State
+        let currentUser = null;
+        let systemSettings = { 
+            assessmentOpen: false, 
+            certificateOpen: false, 
+            assessmentQuestions: ['ด้านเนื้อหาการอบรม', 'ด้านวิทยากร', 'ด้านสถานที่และการอำนวยความสะดวก'], 
+            certTemplateUrl: '',
+            certFontSize: 60,
+            certFontColor: '#000000',
+            certYPos: 50
+        };
+
+        // UI Helpers
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+        }
+
+        function toggleView(sectionId) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('register-section').classList.add('hidden');
+            document.getElementById('forgot-password-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('admin-dashboard-section').classList.add('hidden');
+            document.getElementById('edit-profile-section').classList.add('hidden');
+            document.getElementById('user-nav').classList.add('hidden');
+
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            if (currentUser) {
+                document.getElementById('user-nav').classList.remove('hidden');
+                document.getElementById('display-user-name').innerText = currentUser.name;
+                
+                // ซ่อนปุ่มแก้ไขข้อมูลถ้าเป็น Admin
+                if (currentUser.role === 'admin') {
+                    document.getElementById('btn-edit-profile').classList.add('hidden');
+                } else {
+                    document.getElementById('btn-edit-profile').classList.remove('hidden');
+                }
+
+                if (sectionId === 'dashboard-section') {
+                    document.getElementById('welcome-name').innerText = currentUser.name;
+                    document.getElementById('train-name').value = currentUser.name;
+                    
+                    // ดึงข้อมูลจากการสมัครสมาชิกมาแสดงในฟอร์มสมัครอบรม
+                    document.getElementById('train-position').value = currentUser.position || '';
+                    document.getElementById('train-school').value = currentUser.school || '';
+                    document.getElementById('train-campus').value = currentUser.campus || '';
+                    document.getElementById('train-phone').value = currentUser.phone || '';
+
+                    // จัดการสถานะเมนู (Tabs) และฟอร์มสมัครอบรม
+                    const tabRegister = document.getElementById('tab-register');
+                    const tabAssessment = document.getElementById('tab-assessment');
+                    const tabCertificate = document.getElementById('tab-certificate');
+                    const formContainer = document.getElementById('training-form-container');
+                    const statusContainer = document.getElementById('registration-status-container');
+                    
+                    const statusIcon = document.getElementById('status-icon');
+                    const statusTitle = document.getElementById('status-title');
+                    const statusDesc = document.getElementById('status-desc');
+
+                    if (currentUser.isRegistered) {
+                        formContainer.classList.add('hidden');
+                        statusContainer.classList.remove('hidden');
+
+                        if (currentUser.regStatus === 'approved') {
+                            
+                            statusIcon.className = 'fa-solid fa-circle-check text-success mb-3';
+                            statusTitle.className = 'fw-bold text-success';
+                            statusTitle.innerText = 'ยืนยันการสมัครแล้ว';
+                            statusDesc.innerHTML = '<i class="fa-solid fa-check-double me-2"></i>เจ้าหน้าที่ตรวจสอบและยืนยันสิทธิ์แล้ว';
+
+                            // ปลดล็อกเมนู ตามการตั้งค่าของ Admin
+                            if (systemSettings.assessmentOpen) {
+                                tabAssessment.classList.remove('disabled');
+                                tabAssessment.innerHTML = '<i class="fa-solid fa-clipboard-list me-2"></i>ประเมินความพึงพอใจ';
+                                
+                                // จัดการแสดงผลฟอร์มประเมินตามสถานะของผู้ใช้
+                                const assessFormContainer = document.getElementById('assessment-form-container');
+                                const assessSuccessContainer = document.getElementById('assessment-success-container');
+                                
+                                if (currentUser.isAssessed) {
+                                    assessFormContainer.classList.add('hidden');
+                                    assessSuccessContainer.classList.remove('hidden');
+                                } else {
+                                    assessFormContainer.classList.remove('hidden');
+                                    assessSuccessContainer.classList.add('hidden');
+                                    
+                                    // สร้างฟอร์มคำถามในฝั่งผู้ใช้งานตามจำนวนที่ Admin ตั้งไว้
+                                    const dynContainer = document.getElementById('assessment-dynamic-questions');
+                                    dynContainer.innerHTML = '';
+                                    const questions = systemSettings.assessmentQuestions || [];
+                                    questions.forEach((q, index) => {
+                                        dynContainer.innerHTML += `
+                                        <div class="mb-4">
+                                            <label class="form-label fw-bold">${index + 1}. ${q} <span class="text-danger">*</span></label>
+                                            <div class="d-flex justify-content-between px-md-4">
+                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="1" required><label class="form-check-label">1</label></div>
+                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="2"><label class="form-check-label">2</label></div>
+                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="3"><label class="form-check-label">3</label></div>
+                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="4"><label class="form-check-label">4</label></div>
+                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="5"><label class="form-check-label">5</label></div>
+                                            </div>
+                                        </div>
+                                        `;
+                                    });
+                                }
+
+                            } else {
+                                tabAssessment.classList.add('disabled');
+                                tabAssessment.innerHTML = '<i class="fa-solid fa-lock me-2"></i>ประเมิน (ยังไม่เปิด)';
+                            }
+
+                            if (systemSettings.certificateOpen) {
+                                tabCertificate.classList.remove('disabled');
+                                tabCertificate.innerHTML = '<i class="fa-solid fa-award me-2"></i>เกียรติบัตร';
+                            } else {
+                                tabCertificate.classList.add('disabled');
+                                tabCertificate.innerHTML = '<i class="fa-solid fa-lock me-2"></i>เกียรติบัตร (ยังไม่เปิด)';
+                            }
+
+                            // จัดการปุ่มดาวน์โหลดเกียรติบัตร
+                            const certBtn = document.getElementById('btn-download-cert');
+                            const certWarning = document.getElementById('cert-warning-container');
+                            
+                            if (certBtn) {
+                                // ถ้าประเมินแล้ว ให้ปุ่มดาวน์โหลดโผล่ขึ้นมา
+                                if (currentUser.isAssessed) {
+                                    certWarning.classList.add('hidden');
+                                    certBtn.classList.remove('hidden');
+                                    certBtn.onclick = () => generateAndDownloadCertificate(currentUser.name);
+                                } else {
+                                    certWarning.classList.remove('hidden');
+                                    certBtn.classList.add('hidden');
+                                }
+                            }
+
+                        } else {
+                            // ล็อกเมนู (รอตรวจสอบ)
+                            tabAssessment.classList.add('disabled');
+                            tabAssessment.innerHTML = '<i class="fa-solid fa-clipboard-list me-2"></i>ประเมินความพึงพอใจ';
+                            tabCertificate.classList.add('disabled');
+                            tabCertificate.innerHTML = '<i class="fa-solid fa-award me-2"></i>เกียรติบัตร';
+                            
+                            statusIcon.className = 'fa-solid fa-clock text-warning mb-3';
+                            statusTitle.className = 'fw-bold text-warning';
+                            statusTitle.innerText = 'รอการยืนยัน';
+                            statusDesc.innerHTML = '<i class="fa-solid fa-hourglass-half me-2"></i>รอการตรวจสอบจากเจ้าหน้าที่';
+                            
+                            bootstrap.Tab.getOrCreateInstance(tabRegister).show();
+                        }
+                    } else {
+                        // ยังไม่สมัคร -> ล็อกเมนูและแสดงฟอร์ม
+                        tabAssessment.classList.add('disabled');
+                        tabCertificate.classList.add('disabled');
+                        formContainer.classList.remove('hidden');
+                        statusContainer.classList.add('hidden');
+                        
+                        bootstrap.Tab.getOrCreateInstance(tabRegister).show();
+                    }
+                }
+            }
+        }
+
+        function showEditProfile() {
+            if(!currentUser) return;
+            document.getElementById('edit-email').value = currentUser.email;
+            document.getElementById('edit-name').value = currentUser.name;
+            document.getElementById('edit-phone').value = currentUser.phone || '';
+            document.getElementById('edit-position').value = currentUser.position || '';
+            document.getElementById('edit-academic-title').value = currentUser.academicTitle || '';
+            document.getElementById('edit-password').value = ''; // ว่างไว้เสมอ
+            
+            toggleView('edit-profile-section');
+        }
+
+        function logout() {
+            Swal.fire({
+                title: 'ยืนยันการออกจากระบบ?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0d6efd',
+                cancelButtonColor: '#dc3545',
+                confirmButtonText: 'ออกจากระบบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    currentUser = null;
+                    document.getElementById('login-form').reset();
+                    toggleView('login-section');
+                }
+            });
+        }
+
+        // --- Mock API สำหรับทดสอบ UI เมื่อยังไม่มี GAS URL ---
+        const mockDB = { 
+            users: [
+                { email: 'admin@admin.com', password: 'password', name: 'ผู้ดูแลระบบ', role: 'admin' } // ไอดีแอดมินจำลอง
+            ], 
+            registrations: [],
+            assessments: [],
+            settings: { assessmentOpen: false, certificateOpen: false, assessmentQuestions: ['ด้านเนื้อหาการอบรม', 'ด้านวิทยากร', 'ด้านสถานที่และการอำนวยความสะดวก'], certTemplateUrl: '', certFontSize: 60, certFontColor: '#000000', certYPos: 50 }
+        };
+        async function mockFetch(action, payload) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    if(action === 'registerMember') {
+                        const exists = mockDB.users.find(u => u.email === payload.email);
+                        if(exists) resolve({ status: 'error', message: 'อีเมลนี้ถูกใช้งานแล้ว' });
+                        else {
+                            payload.role = 'user';
+                            mockDB.users.push(payload);
+                            resolve({ status: 'success', message: 'สมัครสมาชิกสำเร็จ' });
+                        }
+                    } else if(action === 'login') {
+                        const user = mockDB.users.find(u => u.email === payload.email && u.password === payload.password);
+                        if(user) {
+                            if (user.role === 'admin') {
+                                resolve({ status: 'success', user: { name: user.name, email: user.email, role: 'admin' }, settings: mockDB.settings });
+                            } else {
+                                const reg = mockDB.registrations.find(r => r.email === payload.email);
+                                const assess = mockDB.assessments.find(a => a.email === payload.email);
+                                resolve({ status: 'success', user: { name: user.name, email: user.email, phone: user.phone, position: user.position, academicTitle: user.academicTitle, school: user.school, campus: user.campus, isRegistered: !!reg, regStatus: reg ? reg.status : 'none', isAssessed: !!assess }, settings: mockDB.settings });
+                            }
+                        }
+                        else resolve({ status: 'error', message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
+                    } else if(action === 'editMember') {
+                        const userIndex = mockDB.users.findIndex(u => u.email === payload.email);
+                        if(userIndex !== -1) {
+                            mockDB.users[userIndex].name = payload.name;
+                            mockDB.users[userIndex].phone = payload.phone;
+                            mockDB.users[userIndex].position = payload.position;
+                            mockDB.users[userIndex].academicTitle = payload.academicTitle;
+                            if(payload.password) mockDB.users[userIndex].password = payload.password;
+                            resolve({ status: 'success', message: 'อัปเดตข้อมูลสำเร็จ' });
+                        } else {
+                            resolve({ status: 'error', message: 'ไม่พบผู้ใช้งาน' });
+                        }
+                    } else if(action === 'forgotPassword') {
+                        const exists = mockDB.users.find(u => u.email === payload.email);
+                        if(exists) {
+                            resolve({ status: 'success', message: 'จำลอง: ระบบได้ส่งรหัสผ่านไปยังอีเมลของคุณแล้ว' });
+                        } else {
+                            resolve({ status: 'error', message: 'ไม่พบอีเมลนี้ในระบบ' });
+                        }
+                    } else if(action === 'registerTraining') {
+                        payload.status = 'pending'; // ตั้งสถานะเริ่มต้นเป็น รอตรวจสอบ
+                        mockDB.registrations.push(payload);
+                        resolve({ status: 'success', message: 'บันทึกข้อมูลการสมัครอบรมเรียบร้อยแล้ว' });
+                    } else if (action === 'getAdminData') {
+                        resolve({ status: 'success', data: mockDB.registrations });
+                    } else if (action === 'approveRegistration') {
+                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        if (reg) {
+                            reg.status = 'approved';
+                            resolve({ status: 'success', message: 'ยืนยันการสมัครสำเร็จ' });
+                        } else {
+                            resolve({ status: 'error', message: 'ไม่พบข้อมูล' });
+                        }
+                    } else if (action === 'getSettings') {
+                        resolve({ status: 'success', settings: mockDB.settings });
+                    } else if (action === 'updateSettings') {
+                        mockDB.settings = payload;
+                        resolve({ status: 'success', message: 'บันทึกการตั้งค่าระบบเรียบร้อย' });
+                    } else if (action === 'submitAssessment') {
+                        mockDB.assessments.push(payload);
+                        resolve({ status: 'success', message: 'บันทึกแบบประเมินสำเร็จ' });
+                    } else if (action === 'uploadCertTemplate') {
+                        mockDB.settings.certTemplateUrl = 'mock-cert';
+                        resolve({ status: 'success', message: 'จำลองการอัปโหลดสำเร็จ', url: mockDB.settings.certTemplateUrl });
+                    } else if (action === 'getTemplateBase64') {
+                        // จำลองรูปภาพว่างเปล่า 800x600 กรณี Mock
+                        const canvas = document.createElement('canvas'); canvas.width=800; canvas.height=600;
+                        const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0,0,800,600);
+                        resolve({ status: 'success', base64: canvas.toDataURL() });
+                    }
+                }, 1000); // ดีเลย์ 1 วินาที
+            });
+        }
+
+        // --- Core Fetch Function ---
+        async function sendDataToGAS(action, payload) {
+            if (!GAS_WEBAPP_URL) {
+                console.log("Using Mock Mode (No GAS URL provided)");
+                return mockFetch(action, payload);
+            }
+
+            try {
+                const response = await fetch(GAS_WEBAPP_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: action, data: payload })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return { status: 'error', message: 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์' };
+            }
+        }
+
+        // --- แอดมิน: โหลดข้อมูลตาราง ---
+        async function loadAdminData() {
+            showLoading();
+            // โหลดตาราง
+            const res = await sendDataToGAS('getAdminData', {});
+            // โหลดการตั้งค่า
+            const resSettings = await sendDataToGAS('getSettings', {});
+            hideLoading();
+            
+            if (resSettings.status === 'success') {
+                systemSettings = resSettings.settings;
+                updateSettingsUI();
+            }
+
+            if (res.status === 'success') {
+                const tbody = document.getElementById('admin-table-body');
+                tbody.innerHTML = '';
+                
+                if (res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">ยังไม่มีผู้ลงทะเบียน</td></tr>';
+                    return;
+                }
+                
+                res.data.forEach((item) => {
+                    const statusBadge = item.status === 'approved' 
+                        ? '<span class="badge bg-success px-3 py-2 rounded-pill">ยืนยันแล้ว</span>' 
+                        : '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill">รอตรวจสอบ</span>';
+                        
+                    const actionBtn = item.status === 'approved'
+                        ? `<button class="btn btn-sm btn-secondary" disabled><i class="fa-solid fa-check"></i> เรียบร้อย</button>`
+                        : `<button class="btn btn-sm btn-success shadow-sm" onclick="approveUser('${item.email}')"><i class="fa-solid fa-check me-1"></i> ยืนยันสิทธิ์</button>`;
+                        
+                    const slipLink = item.slipUrl && item.slipUrl !== 'ไม่มีไฟล์แนบ' 
+                        ? `<a href="${item.slipUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-file-invoice"></i> ดูไฟล์</a>` 
+                        : '<span class="text-muted">-</span>';
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td class="text-start">${item.name}<br><small class="text-muted">${item.email}</small></td>
+                            <td>${item.school}</td>
+                            <td>${item.phone}</td>
+                            <td>${slipLink}</td>
+                            <td>${statusBadge}</td>
+                            <td>${actionBtn}</td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        // --- แอดมิน: กดยืนยันผู้ใช้ ---
+        window.approveUser = async function(email) {
+            Swal.fire({
+                title: 'ยืนยันการสมัคร?',
+                text: "คุณต้องการยืนยันสิทธิ์ให้ผู้ใช้งานรายนี้ใช่หรือไม่",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, ยืนยันเลย',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading();
+                    const res = await sendDataToGAS('approveRegistration', { email: email });
+                    hideLoading();
+                    
+                    if (res.status === 'success') {
+                        Swal.fire('สำเร็จ', 'ยืนยันการสมัครเรียบร้อยแล้ว', 'success');
+                        loadAdminData(); // โหลดตารางใหม่
+                    } else {
+                        Swal.fire('ผิดพลาด', res.message, 'error');
+                    }
+                }
+            });
+        }
+
+        // --- แอดมิน: จัดการการตั้งค่าระบบ ---
+        function generateQuestionInputs() {
+            const container = document.getElementById('admin-questions-container');
+            const num = parseInt(document.getElementById('num-questions').value) || 1;
+            
+            // ดึงค่าเดิมที่กรอกค้างไว้ เพื่อไม่ให้หายไปเวลากดเปลี่ยนจำนวน
+            const currentInputs = document.querySelectorAll('.admin-q-input');
+            const currentVals = Array.from(currentInputs).map(inp => inp.value);
+
+            let html = '';
+            for(let i = 0; i < num; i++) {
+                // พยายามใช้ค่าที่เพิ่งกรอกไป หรือค่าจากระบบ (ถ้ามี)
+                let val = currentVals[i] !== undefined ? currentVals[i] : (systemSettings.assessmentQuestions && systemSettings.assessmentQuestions[i] ? systemSettings.assessmentQuestions[i] : '');
+                html += `
+                <div class="col-md-12 mb-2">
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text fw-bold text-muted" style="width: 80px;">ข้อ ${i+1}</span>
+                        <input type="text" class="form-control admin-q-input" value="${val}" placeholder="ระบุหัวข้อที่ต้องการประเมิน...">
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        // ฟังก์ชันสร้างตัวอย่างแบบประเมินสำหรับ Admin
+        function renderAdminAssessmentPreview() {
+            const previewContainer = document.getElementById('admin-preview-dynamic-questions');
+            if (!previewContainer) return;
+
+            previewContainer.innerHTML = '';
+            const questions = systemSettings.assessmentQuestions || [];
+            questions.forEach((q, index) => {
+                previewContainer.innerHTML += `
+                <div class="mb-4">
+                    <label class="form-label fw-bold">${index + 1}. ${q} <span class="text-danger">*</span></label>
+                    <div class="d-flex justify-content-between px-md-4">
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="preview_q${index}" value="1"><label class="form-check-label">1</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="preview_q${index}" value="2"><label class="form-check-label">2</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="preview_q${index}" value="3"><label class="form-check-label">3</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="preview_q${index}" value="4"><label class="form-check-label">4</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="preview_q${index}" value="5"><label class="form-check-label">5</label></div>
+                    </div>
+                </div>
+                `;
+            });
+        }
+
+        function updateSettingsUI() {
+            const chkAssess = document.getElementById('toggle-assessment');
+            const chkCert = document.getElementById('toggle-certificate');
+            const lblAssess = document.getElementById('label-assessment-status');
+            const lblCert = document.getElementById('label-certificate-status');
+
+            chkAssess.checked = systemSettings.assessmentOpen;
+            chkCert.checked = systemSettings.certificateOpen;
+
+            lblAssess.innerText = systemSettings.assessmentOpen ? "สถานะ: เปิดใช้งาน" : "สถานะ: ปิดใช้งาน";
+            lblAssess.className = systemSettings.assessmentOpen ? "mt-2 fw-bold text-success" : "mt-2 text-muted";
+
+            lblCert.innerText = systemSettings.certificateOpen ? "สถานะ: เปิดใช้งาน" : "สถานะ: ปิดใช้งาน";
+            lblCert.className = systemSettings.certificateOpen ? "mt-2 fw-bold text-success" : "mt-2 text-muted";
+            
+            // อัปเดตข้อมูลตำแหน่งการพิมพ์ชื่อ
+            document.getElementById('cert-font-size').value = systemSettings.certFontSize || 60;
+            document.getElementById('cert-font-color').value = systemSettings.certFontColor || '#000000';
+            document.getElementById('cert-y-pos').value = systemSettings.certYPos || 50;
+
+            // อัปเดตการแสดงผลสถานะเทมเพลต
+            const templateInfo = document.getElementById('current-template-info');
+            if (templateInfo) {
+                if (systemSettings.certTemplateUrl) {
+                    templateInfo.innerHTML = `<i class="fa-solid fa-circle-check text-success me-1"></i> มีเทมเพลตในระบบแล้ว <a href="${systemSettings.certTemplateUrl}" target="_blank" class="ms-2 text-decoration-none"><i class="fa-solid fa-external-link-alt me-1"></i>ดูเทมเพลตปัจจุบัน</a>`;
+                } else {
+                    templateInfo.innerHTML = `<i class="fa-solid fa-circle-xmark text-danger me-1"></i> ยังไม่มีเทมเพลตในระบบ`;
+                }
+            }
+
+            // ตั้งค่าจำนวนข้อเริ่มต้นและสร้างช่องกรอก
+            const questions = systemSettings.assessmentQuestions || ['ด้านเนื้อหาการอบรม', 'ด้านวิทยากร', 'ด้านสถานที่และการอำนวยความสะดวก'];
+            document.getElementById('num-questions').value = questions.length;
+            generateQuestionInputs();
+            renderAdminAssessmentPreview(); // อัปเดตการแสดงตัวอย่าง
+        }
+
+        window.updateSystemSettings = async function() {
+            const assessOpen = document.getElementById('toggle-assessment').checked;
+            const certOpen = document.getElementById('toggle-certificate').checked;
+
+            const fontSize = parseInt(document.getElementById('cert-font-size').value) || 60;
+            const fontColor = document.getElementById('cert-font-color').value || '#000000';
+            const yPos = parseInt(document.getElementById('cert-y-pos').value) || 50;
+
+            // รวบรวมคำถามทั้งหมดจากช่อง input
+            const qInputs = document.querySelectorAll('.admin-q-input');
+            const questions = Array.from(qInputs).map(inp => inp.value);
+
+            // Update local state and UI
+            systemSettings.assessmentOpen = assessOpen;
+            systemSettings.certificateOpen = certOpen;
+            systemSettings.assessmentQuestions = questions;
+            systemSettings.certFontSize = fontSize;
+            systemSettings.certFontColor = fontColor;
+            systemSettings.certYPos = yPos;
+            
+            updateSettingsUI();
+
+            const res = await sendDataToGAS('updateSettings', systemSettings);
+            if(res.status !== 'success') {
+                Swal.fire('ผิดพลาด', 'ไม่สามารถบันทึกการตั้งค่าได้', 'error');
+            } else {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'บันทึกการตั้งค่าแล้ว'
+                });
+            }
+        }
+
+        window.uploadCertTemplate = async function() {
+            const fileInput = document.getElementById('admin-cert-template');
+            if (fileInput.files.length === 0) {
+                Swal.fire('แจ้งเตือน', 'กรุณาเลือกไฟล์เทมเพลตรูปภาพก่อนกดอัปโหลด', 'warning');
+                return;
+            }
+            const file = fileInput.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('ขนาดไฟล์เกิน', 'กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB', 'warning');
+                return;
+            }
+
+            showLoading();
+            try {
+                const base64String = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
+
+                const payload = {
+                    fileName: file.name,
+                    mimeType: file.type,
+                    fileData: base64String
+                };
+
+                const res = await sendDataToGAS('uploadCertTemplate', payload);
+                hideLoading();
+
+                if (res.status === 'success') {
+                    systemSettings.certTemplateUrl = res.url;
+                    updateSettingsUI();
+                    Swal.fire('สำเร็จ', 'อัปโหลดเทมเพลตเกียรติบัตรเรียบร้อยแล้ว', 'success');
+                    fileInput.value = ''; // ล้างค่า input
+                } else {
+                    Swal.fire('ผิดพลาด', res.message, 'error');
+                }
+            } catch (error) {
+                hideLoading();
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้', 'error');
+            }
+        };
+
+        // --- ระบบสร้างเกียรติบัตร (Canvas) ---
+        window.previewCertificateAdmin = function() {
+            generateAndDownloadCertificate("นายสมมติ ทดสอบระบบ (ตัวอย่าง)");
+        };
+
+        async function generateAndDownloadCertificate(userName) {
+            if (!systemSettings.certTemplateUrl) {
+                Swal.fire('แจ้งเตือน', 'ยังไม่มีเทมเพลตเกียรติบัตรในระบบ', 'warning');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // ให้ฝั่ง GAS ดึงรูปภาพจาก Drive ส่งมาเป็น Base64 เพื่อเลี่ยงปัญหาการวาดภาพข้ามโดเมน (CORS)
+                const res = await sendDataToGAS('getTemplateBase64', {});
+                
+                if (res.status === 'success') {
+                    const img = new Image();
+                    img.crossOrigin = "Anonymous";
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        
+                        // วาดรูปพื้นหลัง
+                        ctx.drawImage(img, 0, 0);
+
+                        // ตั้งค่าฟอนต์
+                        const fontSize = systemSettings.certFontSize || 60;
+                        ctx.font = `bold ${fontSize}px Sarabun, sans-serif`;
+                        ctx.fillStyle = systemSettings.certFontColor || '#000000';
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+
+                        // คำนวณพิกัดกึ่งกลาง X และ Y ตาม % 
+                        const x = canvas.width / 2;
+                        const yPercent = systemSettings.certYPos || 50;
+                        const y = canvas.height * (yPercent / 100);
+
+                        // พิมพ์ชื่อลงบนภาพ
+                        ctx.fillText(userName, x, y);
+
+                        // บันทึกภาพลงเครื่อง
+                        const link = document.createElement('a');
+                        link.download = `Certificate_${userName}.jpg`;
+                        link.href = canvas.toDataURL('image/jpeg', 0.9); // Quality 90%
+                        link.click();
+                        
+                        hideLoading();
+                    };
+                    img.onerror = function() {
+                        hideLoading();
+                        Swal.fire('ผิดพลาด', 'ไม่สามารถประมวลผลรูปภาพเทมเพลตได้ กรุณาอัปโหลดเทมเพลตใหม่แบบ JPG/PNG', 'error');
+                    };
+                    img.src = res.base64; 
+                } else {
+                    hideLoading();
+                    Swal.fire('ผิดพลาด', res.message || 'ไม่สามารถโหลดเทมเพลตได้', 'error');
+                }
+            } catch (err) {
+                hideLoading();
+                Swal.fire('ผิดพลาด', 'เกิดข้อผิดพลาดในการสร้างเกียรติบัตร', 'error');
+            }
+        }
+
+        // --- Event Listeners ---
+
+        // 1. Submit สมัครสมาชิก
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('reg-name').value;
+            const position = document.getElementById('reg-position').value;
+            const academicTitle = document.getElementById('reg-academic-title').value;
+            const school = document.getElementById('reg-school').value;
+            const campus = document.getElementById('reg-campus').value;
+            const phone = document.getElementById('reg-phone').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            showLoading();
+            const res = await sendDataToGAS('registerMember', { name, position, academicTitle, school, campus, phone, email, password });
+            hideLoading();
+
+            if (res.status === 'success') {
+                Swal.fire('สำเร็จ!', res.message, 'success').then(() => {
+                    document.getElementById('register-form').reset();
+                    toggleView('login-section');
+                });
+            } else {
+                Swal.fire('ผิดพลาด', res.message, 'error');
+            }
+        });
+
+        // 2. Submit เข้าสู่ระบบ
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            showLoading();
+            const res = await sendDataToGAS('login', { email, password });
+            hideLoading();
+
+            if (res.status === 'success') {
+                currentUser = res.user;
+                if (res.settings) systemSettings = res.settings; // อัปเดตการตั้งค่าระบบจากเซิร์ฟเวอร์
+                
+                Swal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    // แยกระหว่าง Admin กับ User
+                    if (currentUser.role === 'admin') {
+                        toggleView('admin-dashboard-section');
+                        loadAdminData();
+                    } else {
+                        // ปรับค่าเริ่มต้นเผื่อไม่มี
+                        if(!currentUser.phone) currentUser.phone = ''; 
+                        if(!currentUser.position) currentUser.position = ''; 
+                        if(!currentUser.academicTitle) currentUser.academicTitle = ''; 
+                        if(!currentUser.school) currentUser.school = ''; 
+                        if(!currentUser.campus) currentUser.campus = ''; 
+                        if(currentUser.isRegistered === undefined) currentUser.isRegistered = false;
+                        if(currentUser.regStatus === undefined) currentUser.regStatus = 'none';
+                        if(currentUser.isAssessed === undefined) currentUser.isAssessed = false;
+
+                        toggleView('dashboard-section');
+                    }
+                });
+            } else {
+                Swal.fire('ล้มเหลว', res.message, 'error');
+            }
+        });
+
+        // 2.5 Submit แก้ไขข้อมูลส่วนตัว
+        document.getElementById('edit-profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('edit-name').value;
+            const phone = document.getElementById('edit-phone').value;
+            const position = document.getElementById('edit-position').value;
+            const academicTitle = document.getElementById('edit-academic-title').value;
+            const password = document.getElementById('edit-password').value; 
+
+            showLoading();
+            const payload = { 
+                email: currentUser.email, 
+                name: name, 
+                phone: phone, 
+                position: position,
+                academicTitle: academicTitle,
+                password: password 
+            };
+            const res = await sendDataToGAS('editMember', payload);
+            hideLoading();
+
+            if (res.status === 'success') {
+                currentUser.name = name;
+                currentUser.phone = phone;
+                currentUser.position = position;
+                currentUser.academicTitle = academicTitle;
+                
+                Swal.fire('สำเร็จ!', res.message, 'success').then(() => {
+                    toggleView('dashboard-section');
+                });
+            } else {
+                Swal.fire('ผิดพลาด', res.message, 'error');
+            }
+        });
+
+        // 3. Submit สมัครอบรม
+        document.getElementById('training-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const position = document.getElementById('train-position').value;
+            const school = document.getElementById('train-school').value;
+            const campus = document.getElementById('train-campus').value;
+            const phone = document.getElementById('train-phone').value;
+            const remark = document.getElementById('train-remark').value;
+            const fileInput = document.getElementById('train-payment');
+
+            let fileData = "";
+            let fileName = "";
+            let mimeType = "";
+
+            showLoading();
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    hideLoading();
+                    Swal.fire('ขนาดไฟล์เกิน', 'กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB', 'warning');
+                    return;
+                }
+                fileName = file.name;
+                mimeType = file.type;
+                try {
+                    const base64String = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                        reader.onerror = (error) => reject(error);
+                        reader.readAsDataURL(file);
+                    });
+                    fileData = base64String;
+                } catch (error) {
+                    hideLoading();
+                    Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้', 'error');
+                    return;
+                }
+            }
+
+            const payload = { 
+                name: currentUser.name, 
+                email: currentUser.email, 
+                position: position,
+                school: school,
+                campus: campus,
+                phone: phone,
+                remark: remark,
+                fileName: fileName,
+                mimeType: mimeType,
+                fileData: fileData 
+            };
+
+            const res = await sendDataToGAS('registerTraining', payload);
+            hideLoading();
+
+            if (res.status === 'success') {
+                currentUser.isRegistered = true; 
+                currentUser.regStatus = 'pending'; // อัปเดตสถานะเป็นรอตรวจสอบ
+                
+                Swal.fire('ลงทะเบียนสำเร็จ!', res.message, 'success').then(() => {
+                    document.getElementById('training-form').reset();
+                    toggleView('dashboard-section'); // โหลดหน้า Dashboard ใหม่เพื่อแสดงสถานะรอตรวจสอบ
+                });
+            } else {
+                Swal.fire('ผิดพลาด', res.message, 'error');
+            }
+        });
+
+        // 4. Submit ลืมรหัสผ่าน
+        document.getElementById('forgot-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+
+            showLoading();
+            const res = await sendDataToGAS('forgotPassword', { email: email });
+            hideLoading();
+
+            if (res.status === 'success') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ส่งข้อมูลแล้ว',
+                    text: res.message,
+                }).then(() => {
+                    document.getElementById('forgot-password-form').reset();
+                    toggleView('login-section');
+                });
+            } else {
+                Swal.fire('ข้อผิดพลาด', res.message, 'error');
+            }
+        });
+
+        // 5. Submit แบบประเมินความพึงพอใจ
+        document.getElementById('assessment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const answers = [];
+            const questionsCount = systemSettings.assessmentQuestions ? systemSettings.assessmentQuestions.length : 0;
+            
+            // ดึงคะแนนทีละข้อตามที่กำหนดไว้
+            for(let i = 0; i < questionsCount; i++) {
+                const val = document.querySelector(`input[name="q${i}"]:checked`)?.value;
+                answers.push(val);
+            }
+            
+            const suggestion = document.getElementById('assess-suggestion').value;
+
+            showLoading();
+            const payload = {
+                email: currentUser.email,
+                name: currentUser.name,
+                answers: answers,
+                suggestion: suggestion
+            };
+
+            const res = await sendDataToGAS('submitAssessment', payload);
+            hideLoading();
+
+            if (res.status === 'success') {
+                currentUser.isAssessed = true;
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ขอบคุณครับ',
+                    text: res.message
+                }).then(() => {
+                    // เปลี่ยน UI ไปหน้า Success ของแบบประเมิน และปลดล็อกเกียรติบัตรทันที
+                    toggleView('dashboard-section');
+                });
+            } else {
+                Swal.fire('เกิดข้อผิดพลาด', res.message, 'error');
+            }
+        });
+
+    </script>
+</body>
+</html>
