@@ -292,7 +292,30 @@
                         <i class="fa-solid fa-cogs me-2"></i>ตั้งค่าระบบ (System Settings)
                     </div>
                     <div class="card-body p-4">
-                        <div class="row text-center">
+
+                        <!-- ส่วนตั้งค่าข้อมูลโครงการ -->
+                        <div class="row text-start mb-4">
+                            <div class="col-12 mb-3">
+                                <h5 class="fw-bold"><i class="fa-solid fa-info-circle me-2"></i>ข้อมูลโครงการอบรม</h5>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label text-muted">ชื่อโครงการอบรม</label>
+                                <input type="text" class="form-control" id="admin-project-name" placeholder="เช่น โครงการพัฒนาศักยภาพครูและบุคลากรทางการศึกษา">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">ช่วงเวลาการอบรม</label>
+                                <input type="text" class="form-control" id="admin-project-date" placeholder="เช่น 1 - 2 พฤษภาคม 2567">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted">สถานที่การอบรม</label>
+                                <input type="text" class="form-control" id="admin-project-location" placeholder="เช่น ห้องประชุมสำนักงานเขตพื้นที่การศึกษา">
+                            </div>
+                            <div class="col-12 text-end">
+                                <button class="btn btn-primary" onclick="updateSystemSettings()"><i class="fa-solid fa-save me-2"></i>บันทึกข้อมูลโครงการ</button>
+                            </div>
+                        </div>
+
+                        <div class="row text-center border-top pt-4">
                             <div class="col-md-6 border-end">
                                 <h5 class="mb-3">เมนูประเมินความพึงพอใจ</h5>
                                 <div class="form-check form-switch d-flex justify-content-center fs-4">
@@ -478,6 +501,16 @@
 
                                 <!-- ฟอร์มสมัครอบรม -->
                                 <div id="training-form-container">
+                                    
+                                    <!-- แจ้งเตือนโครงการอบรม -->
+                                    <div class="alert alert-secondary mb-4 border-start border-primary border-4 shadow-sm" style="background-color: #f8f9fa;">
+                                        <h5 class="fw-bold text-primary-custom mb-3" id="display-project-name"><i class="fa-solid fa-chalkboard-user me-2"></i>กำลังโหลดข้อมูลโครงการ...</h5>
+                                        <div class="d-flex flex-column gap-2 text-dark">
+                                            <div><i class="fa-regular fa-calendar text-primary me-2"></i> <strong>ช่วงเวลาการอบรม:</strong> <span id="display-project-date">-</span></div>
+                                            <div><i class="fa-solid fa-location-dot text-danger me-2"></i> <strong>สถานที่:</strong> <span id="display-project-location">-</span></div>
+                                        </div>
+                                    </div>
+
                                     <div id="canceled-alert" class="alert alert-danger mb-4 hidden">
                                         <i class="fa-solid fa-circle-xmark me-2"></i> <strong>การลงทะเบียนเดิมของคุณถูกปฏิเสธ/ยกเลิก</strong> กรุณาตรวจสอบข้อมูลและทำการยืนยันการสมัครเข้ามาใหม่อีกครั้ง
                                     </div>
@@ -679,7 +712,7 @@
         // ==========================================
         // ⚠️ นำ URL จาก Google Apps Script มาใส่ที่นี่
         // ==========================================
-        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzf9g1Vv2UGMtQT5NWAk6fxhYRbxUHsqCerNfF02kWCkyWQGXOs0GiYD-ZybbQSLsqU/exec"; 
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzGQ5pr9nQZR8kuq52ooJx4UYg1lot_ZzJsSMrw99jJlQFhtL4hzLM8qdqsMDXrqGpH/exec"; 
         
         // State
         let currentUser = null;
@@ -690,7 +723,10 @@
             certTemplateUrl: '',
             certFontSize: 60,
             certFontColor: '#000000',
-            certYPos: 50
+            certYPos: 50,
+            projectName: 'โครงการอบรมเชิงปฏิบัติการ (ตัวอย่าง)',
+            projectDate: '-',
+            projectLocation: '-'
         };
 
         // UI Helpers
@@ -738,6 +774,11 @@
                     document.getElementById('welcome-name').innerText = currentUser.name;
                     document.getElementById('train-name').value = currentUser.name;
                     
+                    // แสดงข้อมูลโครงการอบรม
+                    document.getElementById('display-project-name').innerText = systemSettings.projectName || 'ยังไม่ได้ตั้งชื่อโครงการ';
+                    document.getElementById('display-project-date').innerText = systemSettings.projectDate || '-';
+                    document.getElementById('display-project-location').innerText = systemSettings.projectLocation || '-';
+
                     // ดึงข้อมูลจากการสมัครสมาชิกมาแสดงในฟอร์มสมัครอบรม
                     document.getElementById('train-position').value = currentUser.position || '';
                     document.getElementById('train-school').value = currentUser.school || '';
@@ -808,24 +849,8 @@
                                     assessFormContainer.classList.remove('hidden');
                                     assessSuccessContainer.classList.add('hidden');
                                     
-                                    // สร้างฟอร์มคำถามในฝั่งผู้ใช้งานตามจำนวนที่ Admin ตั้งไว้
-                                    const dynContainer = document.getElementById('assessment-dynamic-questions');
-                                    dynContainer.innerHTML = '';
-                                    const questions = systemSettings.assessmentQuestions || [];
-                                    questions.forEach((q, index) => {
-                                        dynContainer.innerHTML += `
-                                        <div class="mb-4">
-                                            <label class="form-label fw-bold">${index + 1}. ${q} <span class="text-danger">*</span></label>
-                                            <div class="d-flex justify-content-between px-md-4">
-                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="1" required><label class="form-check-label">1</label></div>
-                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="2"><label class="form-check-label">2</label></div>
-                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="3"><label class="form-check-label">3</label></div>
-                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="4"><label class="form-check-label">4</label></div>
-                                                <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="5"><label class="form-check-label">5</label></div>
-                                            </div>
-                                        </div>
-                                        `;
-                                    });
+                                    // เรียกใช้ฟังก์ชันสร้างฟอร์มคำถามประเมิน
+                                    renderUserAssessment();
                                 }
 
                             } else {
@@ -929,7 +954,7 @@
             ], 
             registrations: [],
             assessments: [],
-            settings: { assessmentOpen: false, certificateOpen: false, assessmentQuestions: ['ด้านเนื้อหาการอบรม', 'ด้านวิทยากร', 'ด้านสถานที่และการอำนวยความสะดวก'], certTemplateUrl: '', certFontSize: 60, certFontColor: '#000000', certYPos: 50 }
+            settings: { assessmentOpen: false, certificateOpen: false, assessmentQuestions: ['ด้านเนื้อหาการอบรม', 'ด้านวิทยากร', 'ด้านสถานที่และการอำนวยความสะดวก'], certTemplateUrl: '', certFontSize: 60, certFontColor: '#000000', certYPos: 50, projectName: 'โครงการอบรมเชิงปฏิบัติการ (ตัวอย่าง)', projectDate: '1 พฤษภาคม 2567', projectLocation: 'ห้องประชุมตัวอย่าง' }
         };
         async function mockFetch(action, payload) {
             return new Promise((resolve) => {
@@ -1256,6 +1281,29 @@
             });
         }
 
+        // ฟังก์ชันสร้างฟอร์มคำถามประเมินฝั่งผู้ใช้งาน (ผู้สมัคร)
+        function renderUserAssessment() {
+            const dynContainer = document.getElementById('assessment-dynamic-questions');
+            if (!dynContainer) return;
+            
+            dynContainer.innerHTML = '';
+            const questions = systemSettings.assessmentQuestions || [];
+            questions.forEach((q, index) => {
+                dynContainer.innerHTML += `
+                <div class="mb-4">
+                    <label class="form-label fw-bold">${index + 1}. ${q} <span class="text-danger">*</span></label>
+                    <div class="d-flex justify-content-between px-md-4">
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="1" required><label class="form-check-label">1</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="2"><label class="form-check-label">2</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="3"><label class="form-check-label">3</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="4"><label class="form-check-label">4</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="q${index}" value="5"><label class="form-check-label">5</label></div>
+                    </div>
+                </div>
+                `;
+            });
+        }
+
         function updateSettingsUI() {
             const chkAssess = document.getElementById('toggle-assessment');
             const chkCert = document.getElementById('toggle-certificate');
@@ -1271,6 +1319,10 @@
             lblCert.innerText = systemSettings.certificateOpen ? "สถานะ: เปิดใช้งาน" : "สถานะ: ปิดใช้งาน";
             lblCert.className = systemSettings.certificateOpen ? "mt-2 fw-bold text-success" : "mt-2 text-muted";
             
+            document.getElementById('admin-project-name').value = systemSettings.projectName || '';
+            document.getElementById('admin-project-date').value = systemSettings.projectDate || '';
+            document.getElementById('admin-project-location').value = systemSettings.projectLocation || '';
+
             document.getElementById('cert-font-size').value = systemSettings.certFontSize || 60;
             document.getElementById('cert-font-color').value = systemSettings.certFontColor || '#000000';
             document.getElementById('cert-y-pos').value = systemSettings.certYPos || 50;
@@ -1294,6 +1346,10 @@
             const assessOpen = document.getElementById('toggle-assessment').checked;
             const certOpen = document.getElementById('toggle-certificate').checked;
 
+            const projectName = document.getElementById('admin-project-name').value;
+            const projectDate = document.getElementById('admin-project-date').value;
+            const projectLocation = document.getElementById('admin-project-location').value;
+
             const fontSize = parseInt(document.getElementById('cert-font-size').value) || 60;
             const fontColor = document.getElementById('cert-font-color').value || '#000000';
             const yPos = parseInt(document.getElementById('cert-y-pos').value) || 50;
@@ -1307,6 +1363,9 @@
             systemSettings.certFontSize = fontSize;
             systemSettings.certFontColor = fontColor;
             systemSettings.certYPos = yPos;
+            systemSettings.projectName = projectName;
+            systemSettings.projectDate = projectDate;
+            systemSettings.projectLocation = projectLocation;
             
             updateSettingsUI();
 
