@@ -457,11 +457,23 @@
                             </div>
                             <div class="card-body p-4">
                                 
-                                <!-- สถานะ: รอการยืนยัน / ยืนยันแล้ว -->
+                                <!-- สถานะ: รอการยืนยัน / ยืนยันแล้ว / รอชำระเงิน / ถูกยกเลิก -->
                                 <div id="registration-status-container" class="hidden text-center py-5">
                                     <i id="status-icon" class="fa-solid fa-clock text-warning mb-3" style="font-size: 5em;"></i>
                                     <h3 id="status-title" class="fw-bold text-warning">รอการยืนยัน</h3>
                                     <h5 id="status-desc" class="text-muted mt-3"><i class="fa-solid fa-hourglass-half me-2"></i>รอการตรวจสอบจากเจ้าหน้าที่</h5>
+                                    
+                                    <!-- ฟอร์มอัปโหลดสลิปเพิ่มเติมกรณีไม่ได้อัปโหลดตอนแรก -->
+                                    <div id="late-slip-upload-container" class="hidden mt-4 p-4 border rounded bg-white shadow-sm text-start mx-auto" style="max-width: 500px;">
+                                        <h5 class="fw-bold text-danger mb-3"><i class="fa-solid fa-file-invoice-dollar me-2"></i>อัปโหลดหลักฐานการชำระเงิน</h5>
+                                        <form id="late-slip-form">
+                                            <div class="mb-3">
+                                                <input type="file" class="form-control" id="late-train-payment" accept="image/png, image/jpeg, image/jpg, application/pdf" required>
+                                                <div class="form-text text-muted">รองรับไฟล์รูปภาพ (JPG, PNG) หรือ PDF (ขนาดไม่เกิน 5MB)</div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-upload me-2"></i>ส่งหลักฐานการชำระเงิน</button>
+                                        </form>
+                                    </div>
                                 </div>
 
                                 <!-- ฟอร์มสมัครอบรม -->
@@ -664,7 +676,7 @@
         // ==========================================
         // ⚠️ นำ URL จาก Google Apps Script มาใส่ที่นี่
         // ==========================================
-        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzwQ8Y0kid48wAJdNRaRhFe8fS_U9UvKP7Tbvn4aM_jl16SrsF1T_dif7TgsOWL7y_b/exec"; 
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCVVTOJxlWwvEuZAzcvVoCVayvLB2mQADTNIfwq4DBW-v_ekSm8RRDJS7tBFwQ2fM6/exec"; 
         
         // State
         let currentUser = null;
@@ -725,6 +737,7 @@
                     const tabCertificate = document.getElementById('tab-certificate');
                     const formContainer = document.getElementById('training-form-container');
                     const statusContainer = document.getElementById('registration-status-container');
+                    const lateSlipContainer = document.getElementById('late-slip-upload-container');
                     
                     const statusIcon = document.getElementById('status-icon');
                     const statusTitle = document.getElementById('status-title');
@@ -734,12 +747,54 @@
                         formContainer.classList.add('hidden');
                         statusContainer.classList.remove('hidden');
 
-                        if (currentUser.regStatus === 'approved') {
+                        // เช็คว่าได้อัปโหลดสลิปหรือยัง
+                        const missingSlip = !currentUser.slipUrl || currentUser.slipUrl === 'ไม่มีไฟล์แนบ';
+
+                        if (currentUser.regStatus === 'canceled') {
+                            // กรณีถูก Admin ปฏิเสธ/ยกเลิกการลงทะเบียน
+                            statusIcon.className = 'fa-solid fa-circle-xmark text-danger mb-3';
+                            statusTitle.className = 'fw-bold text-danger';
+                            statusTitle.innerText = 'การลงทะเบียนถูกยกเลิก';
+                            statusDesc.innerHTML = '<i class="fa-solid fa-ban me-2"></i>เจ้าหน้าที่ได้ทำการปฏิเสธหรือยกเลิกการลงทะเบียนของคุณ';
+                            if(lateSlipContainer) lateSlipContainer.classList.add('hidden');
+
+                            // ปิดเมนูอื่นๆ ไว้
+                            tabAssessment.classList.add('disabled');
+                            tabAssessment.innerHTML = '<i class="fa-solid fa-lock me-2"></i>ประเมิน (ถูกยกเลิก)';
+                            tabCertificate.classList.add('disabled');
+                            tabCertificate.innerHTML = '<i class="fa-solid fa-lock me-2"></i>เกียรติบัตร (ถูกยกเลิก)';
+                            
+                            const certBtn = document.getElementById('btn-download-cert');
+                            const certWarning = document.getElementById('cert-warning-container');
+                            if(certBtn) certBtn.classList.add('hidden');
+                            if(certWarning) certWarning.classList.add('hidden');
+
+                        } else if (missingSlip) {
+                            // แสดงหน้าให้แจ้งว่ายังไม่ชำระเงิน และมีปุ่มอัปโหลด
+                            statusIcon.className = 'fa-solid fa-file-invoice-dollar text-danger mb-3';
+                            statusTitle.className = 'fw-bold text-danger';
+                            statusTitle.innerText = 'รอหลักฐานการชำระเงิน';
+                            statusDesc.innerHTML = 'คุณได้ลงทะเบียนแล้ว แต่ยังไม่ได้อัปโหลดหลักฐานการชำระเงิน';
+                            if(lateSlipContainer) lateSlipContainer.classList.remove('hidden');
+
+                            // ปิดเมนูอื่นๆ ไว้ก่อน
+                            tabAssessment.classList.add('disabled');
+                            tabAssessment.innerHTML = '<i class="fa-solid fa-lock me-2"></i>ประเมิน (รอชำระเงิน)';
+                            tabCertificate.classList.add('disabled');
+                            tabCertificate.innerHTML = '<i class="fa-solid fa-lock me-2"></i>เกียรติบัตร (รอชำระเงิน)';
+                            
+                            const certBtn = document.getElementById('btn-download-cert');
+                            const certWarning = document.getElementById('cert-warning-container');
+                            if(certBtn) certBtn.classList.add('hidden');
+                            if(certWarning) certWarning.classList.add('hidden');
+
+                        } else if (currentUser.regStatus === 'approved') {
                             
                             statusIcon.className = 'fa-solid fa-circle-check text-success mb-3';
                             statusTitle.className = 'fw-bold text-success';
                             statusTitle.innerText = 'ยืนยันการสมัครแล้ว';
                             statusDesc.innerHTML = '<i class="fa-solid fa-check-double me-2"></i>เจ้าหน้าที่ตรวจสอบและยืนยันสิทธิ์แล้ว';
+                            if(lateSlipContainer) lateSlipContainer.classList.add('hidden');
 
                             // ปลดล็อกเมนู ตามการตั้งค่าของ Admin
                             if (systemSettings.assessmentOpen) {
@@ -807,16 +862,17 @@
                             }
 
                         } else {
-                            // ล็อกเมนู (รอตรวจสอบ)
-                            tabAssessment.classList.add('disabled');
-                            tabAssessment.innerHTML = '<i class="fa-solid fa-clipboard-list me-2"></i>ประเมินความพึงพอใจ';
-                            tabCertificate.classList.add('disabled');
-                            tabCertificate.innerHTML = '<i class="fa-solid fa-award me-2"></i>เกียรติบัตร';
-                            
+                            // ล็อกเมนู (รอตรวจสอบ - มีสลิปแล้ว แต่แอดมินยังไม่กดยืนยัน)
                             statusIcon.className = 'fa-solid fa-clock text-warning mb-3';
                             statusTitle.className = 'fw-bold text-warning';
                             statusTitle.innerText = 'รอการยืนยัน';
                             statusDesc.innerHTML = '<i class="fa-solid fa-hourglass-half me-2"></i>รอการตรวจสอบจากเจ้าหน้าที่';
+                            if(lateSlipContainer) lateSlipContainer.classList.add('hidden');
+
+                            tabAssessment.classList.add('disabled');
+                            tabAssessment.innerHTML = '<i class="fa-solid fa-lock me-2"></i>ประเมิน (ยังไม่เปิด)';
+                            tabCertificate.classList.add('disabled');
+                            tabCertificate.innerHTML = '<i class="fa-solid fa-lock me-2"></i>เกียรติบัตร (ยังไม่เปิด)';
                             
                             bootstrap.Tab.getOrCreateInstance(tabRegister).show();
                         }
@@ -826,6 +882,7 @@
                         tabCertificate.classList.add('disabled');
                         formContainer.classList.remove('hidden');
                         statusContainer.classList.add('hidden');
+                        if(lateSlipContainer) lateSlipContainer.classList.add('hidden');
                         
                         bootstrap.Tab.getOrCreateInstance(tabRegister).show();
                     }
@@ -891,7 +948,7 @@
                             } else {
                                 const reg = mockDB.registrations.find(r => r.email === payload.email);
                                 const assess = mockDB.assessments.find(a => a.email === payload.email);
-                                resolve({ status: 'success', user: { name: user.name, email: user.email, phone: user.phone, position: user.position, academicTitle: user.academicTitle, school: user.school, campus: user.campus, isRegistered: !!reg, regStatus: reg ? reg.status : 'none', isAssessed: !!assess }, settings: mockDB.settings });
+                                resolve({ status: 'success', user: { name: user.name, email: user.email, phone: user.phone, position: user.position, academicTitle: user.academicTitle, school: user.school, campus: user.campus, isRegistered: !!reg, regStatus: reg ? reg.status : 'none', slipUrl: reg ? reg.slipUrl : '', isAssessed: !!assess }, settings: mockDB.settings });
                             }
                         }
                         else resolve({ status: 'error', message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง' });
@@ -916,6 +973,7 @@
                         }
                     } else if(action === 'registerTraining') {
                         payload.status = 'pending'; 
+                        payload.slipUrl = payload.fileData ? 'mock_url_uploaded' : 'ไม่มีไฟล์แนบ';
                         mockDB.registrations.push(payload);
                         resolve({ status: 'success', message: 'บันทึกข้อมูลการสมัครอบรมเรียบร้อยแล้ว' });
                     } else if (action === 'getAdminData') {
@@ -936,6 +994,15 @@
                         } else {
                             resolve({ status: 'error', message: 'ไม่พบข้อมูล' });
                         }
+                    } else if (action === 'cancelRegistration') {
+                        // ปฏิเสธการลงทะเบียน
+                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        if (reg) {
+                            reg.status = 'canceled';
+                            resolve({ status: 'success', message: 'ปฏิเสธและยกเลิกการลงทะเบียนสำเร็จ' });
+                        } else {
+                            resolve({ status: 'error', message: 'ไม่พบข้อมูล' });
+                        }
                     } else if (action === 'getSettings') {
                         resolve({ status: 'success', settings: mockDB.settings });
                     } else if (action === 'updateSettings') {
@@ -952,6 +1019,14 @@
                         const canvas = document.createElement('canvas'); canvas.width=800; canvas.height=600;
                         const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0,0,800,600);
                         resolve({ status: 'success', base64: canvas.toDataURL() });
+                    } else if (action === 'uploadLateSlip') {
+                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        if (reg) {
+                            reg.slipUrl = 'mock_url_uploaded_late';
+                            resolve({ status: 'success', message: 'อัปโหลดสลิปเพิ่มเติมสำเร็จ', url: reg.slipUrl });
+                        } else {
+                            resolve({ status: 'error', message: 'ไม่พบข้อมูลการลงทะเบียน' });
+                        }
                     }
                 }, 1000); 
             });
@@ -1001,18 +1076,30 @@
                 }
                 
                 res.data.forEach((item) => {
-                    const statusBadge = item.status === 'approved' 
-                        ? '<span class="badge bg-success px-3 py-2 rounded-pill">ยืนยันแล้ว</span>' 
-                        : '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill">รอตรวจสอบ</span>';
-                        
-                    // เพิ่มปุ่มยกเลิกการยืนยัน
-                    const actionBtn = item.status === 'approved'
-                        ? `<button class="btn btn-sm btn-outline-danger shadow-sm" onclick="cancelApproval('${item.email}')"><i class="fa-solid fa-xmark me-1"></i> ยกเลิกการยืนยัน</button>`
-                        : `<button class="btn btn-sm btn-success shadow-sm" onclick="approveUser('${item.email}')"><i class="fa-solid fa-check me-1"></i> ยืนยันสิทธิ์</button>`;
+                    let statusBadge = '';
+                    let actionBtn = '';
+
+                    if (item.status === 'approved') {
+                        statusBadge = '<span class="badge bg-success px-3 py-2 rounded-pill">ยืนยันแล้ว</span>';
+                        actionBtn = `
+                            <button class="btn btn-sm btn-outline-warning shadow-sm mb-1 w-100" onclick="cancelApproval('${item.email}')"><i class="fa-solid fa-rotate-left me-1"></i> ยกเลิกการยืนยัน</button>
+                            <button class="btn btn-sm btn-outline-danger shadow-sm w-100" onclick="cancelRegistration('${item.email}')"><i class="fa-solid fa-ban me-1"></i> ปฏิเสธ/ยกเลิก</button>
+                        `;
+                    } else if (item.status === 'canceled') {
+                        statusBadge = '<span class="badge bg-danger px-3 py-2 rounded-pill">ถูกยกเลิก</span>';
+                        actionBtn = `<button class="btn btn-sm btn-secondary w-100" disabled><i class="fa-solid fa-ban"></i> ยกเลิกแล้ว</button>`;
+                    } else {
+                        // Pending
+                        statusBadge = '<span class="badge bg-warning text-dark px-3 py-2 rounded-pill">รอตรวจสอบ</span>';
+                        actionBtn = `
+                            <button class="btn btn-sm btn-success shadow-sm mb-1 w-100" onclick="approveUser('${item.email}')"><i class="fa-solid fa-check me-1"></i> ยืนยันสิทธิ์</button>
+                            <button class="btn btn-sm btn-outline-danger shadow-sm w-100" onclick="cancelRegistration('${item.email}')"><i class="fa-solid fa-ban me-1"></i> ปฏิเสธ/ยกเลิก</button>
+                        `;
+                    }
                         
                     const slipLink = item.slipUrl && item.slipUrl !== 'ไม่มีไฟล์แนบ' 
                         ? `<a href="${item.slipUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-file-invoice"></i> ดูไฟล์</a>` 
-                        : '<span class="text-muted">-</span>';
+                        : '<span class="text-muted text-danger"><i class="fa-solid fa-xmark me-1"></i>ไม่มีสลิป</span>';
                     
                     tbody.innerHTML += `
                         <tr>
@@ -1055,14 +1142,14 @@
             });
         };
 
-        // --- แอดมิน: กดยกเลิกการยืนยันผู้ใช้ ---
+        // --- แอดมิน: กดยกเลิกการยืนยันผู้ใช้ (เปลี่ยนกลับไปรอตรวจสอบ) ---
         window.cancelApproval = async function(email) {
             Swal.fire({
                 title: 'ยกเลิกการยืนยัน?',
                 text: "ผู้ใช้งานรายนี้จะถูกเปลี่ยนสถานะกลับไปเป็น 'รอตรวจสอบ' และไม่สามารถรับเกียรติบัตรได้ ยืนยันหรือไม่?",
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#dc3545',
+                confirmButtonColor: '#ffc107',
                 cancelButtonColor: '#6c757d',
                 confirmButtonText: 'ใช่, ยกเลิกการยืนยัน',
                 cancelButtonText: 'ปิด'
@@ -1074,6 +1161,33 @@
                     
                     if (res.status === 'success') {
                         Swal.fire('สำเร็จ', 'ยกเลิกการยืนยันผู้ใช้งานเรียบร้อยแล้ว', 'success');
+                        loadAdminData(); // โหลดตารางใหม่
+                    } else {
+                        Swal.fire('ผิดพลาด', res.message, 'error');
+                    }
+                }
+            });
+        };
+
+        // --- แอดมิน: กดปฏิเสธ/ยกเลิกการลงทะเบียน (ยกเลิกถาวร) ---
+        window.cancelRegistration = async function(email) {
+            Swal.fire({
+                title: 'ปฏิเสธ/ยกเลิกการลงทะเบียน?',
+                text: "ผู้ใช้งานรายนี้จะถูกยกเลิกการลงทะเบียน ยืนยันหรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'ใช่, ยกเลิกการลงทะเบียน',
+                cancelButtonText: 'ปิด'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    showLoading();
+                    const res = await sendDataToGAS('cancelRegistration', { email: email });
+                    hideLoading();
+                    
+                    if (res.status === 'success') {
+                        Swal.fire('สำเร็จ', 'ปฏิเสธและยกเลิกการลงทะเบียนเรียบร้อยแล้ว', 'success');
                         loadAdminData(); // โหลดตารางใหม่
                     } else {
                         Swal.fire('ผิดพลาด', res.message, 'error');
@@ -1361,6 +1475,7 @@
                         if(currentUser.isRegistered === undefined) currentUser.isRegistered = false;
                         if(currentUser.regStatus === undefined) currentUser.regStatus = 'none';
                         if(currentUser.isAssessed === undefined) currentUser.isAssessed = false;
+                        if(currentUser.slipUrl === undefined) currentUser.slipUrl = ''; // รับค่า slipUrl มาด้วย
 
                         toggleView('dashboard-section');
                     }
@@ -1463,10 +1578,63 @@
             if (res.status === 'success') {
                 currentUser.isRegistered = true; 
                 currentUser.regStatus = 'pending';
+                // บันทึกสถานะสลิปไว้ในตัวแปรทันที
+                currentUser.slipUrl = fileData ? 'uploaded_url' : 'ไม่มีไฟล์แนบ';
                 
                 Swal.fire('ลงทะเบียนสำเร็จ!', res.message, 'success').then(() => {
                     document.getElementById('training-form').reset();
                     toggleView('dashboard-section');
+                });
+            } else {
+                Swal.fire('ผิดพลาด', res.message, 'error');
+            }
+        });
+
+        // ฟังก์ชันสำหรับส่งหลักฐานชำระเงินย้อนหลัง
+        document.getElementById('late-slip-form')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('late-train-payment');
+            
+            if (fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire('ขนาดไฟล์เกิน', 'กรุณาอัปโหลดไฟล์ขนาดไม่เกิน 5MB', 'warning');
+                return;
+            }
+
+            showLoading();
+            let fileData = "";
+            try {
+                fileData = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsDataURL(file);
+                });
+            } catch (error) {
+                hideLoading();
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถอ่านไฟล์ได้', 'error');
+                return;
+            }
+
+            const payload = {
+                email: currentUser.email,
+                fileName: file.name,
+                mimeType: file.type,
+                fileData: fileData
+            };
+
+            // เรียกใช้ API uploadLateSlip
+            const res = await sendDataToGAS('uploadLateSlip', payload);
+            hideLoading();
+
+            if (res.status === 'success') {
+                currentUser.slipUrl = res.url || 'uploaded'; // อัปเดตสถานะในหน้าเว็บ
+                Swal.fire('สำเร็จ', 'อัปโหลดหลักฐานชำระเงินเรียบร้อยแล้ว กรุณารอเจ้าหน้าที่ตรวจสอบ', 'success').then(() => {
+                    // รีเซ็ตฟอร์มและอัปเดตหน้าจอ
+                    document.getElementById('late-slip-form').reset();
+                    toggleView('dashboard-section'); 
                 });
             } else {
                 Swal.fire('ผิดพลาด', res.message, 'error');
