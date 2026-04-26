@@ -679,7 +679,7 @@
         // ==========================================
         // ⚠️ นำ URL จาก Google Apps Script มาใส่ที่นี่
         // ==========================================
-        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby_RQlqrv8NNXHO1hooi3J96d7ShBZYBi4HmEoxUvY_TWWHjLuLGOtVb9CJicRk3rgy/exec"; 
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzf9g1Vv2UGMtQT5NWAk6fxhYRbxUHsqCerNfF02kWCkyWQGXOs0GiYD-ZybbQSLsqU/exec"; 
         
         // State
         let currentUser = null;
@@ -935,8 +935,10 @@
             return new Promise((resolve) => {
                 setTimeout(() => {
                     if(action === 'registerMember') {
-                        const exists = mockDB.users.find(u => u.email === payload.email);
-                        if(exists) resolve({ status: 'error', message: 'อีเมลนี้ถูกใช้งานแล้ว' });
+                        const existsEmail = mockDB.users.find(u => u.email === payload.email);
+                        const existsName = mockDB.users.find(u => u.name === payload.name);
+                        if(existsEmail) resolve({ status: 'error', message: 'อีเมลนี้ถูกใช้งานแล้ว' });
+                        else if(existsName) resolve({ status: 'error', message: 'ชื่อ-นามสกุลนี้ถูกลงทะเบียนไว้ในระบบแล้ว' });
                         else {
                             payload.role = 'user';
                             mockDB.users.push(payload);
@@ -980,6 +982,10 @@
                         // ระบบจำลอง: อัปเดตข้อมูลทับของเดิมถ้ามี (ป้องกันการซ้ำซ้อน)
                         const existingIndex = mockDB.registrations.findIndex(r => r.email === payload.email);
                         if (existingIndex !== -1) {
+                            if (mockDB.registrations[existingIndex].status !== 'canceled') {
+                                resolve({ status: 'error', message: 'คุณได้ลงทะเบียนเข้าร่วมอบรมไปแล้ว ไม่สามารถลงทะเบียนซ้ำได้' });
+                                return;
+                            }
                             mockDB.registrations[existingIndex] = payload;
                         } else {
                             mockDB.registrations.push(payload);
@@ -1533,6 +1539,12 @@
         document.getElementById('training-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            // ป้องกันการยิงคำขอซ้ำจากหน้าเว็บ
+            if (currentUser && currentUser.isRegistered && currentUser.regStatus !== 'canceled') {
+                Swal.fire('ผิดพลาด', 'คุณได้ลงทะเบียนอบรมไปแล้ว ไม่สามารถลงทะเบียนซ้ำได้', 'error');
+                return;
+            }
+
             const position = document.getElementById('train-position').value;
             const school = document.getElementById('train-school').value;
             const campus = document.getElementById('train-campus').value;
