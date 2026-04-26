@@ -478,6 +478,9 @@
 
                                 <!-- ฟอร์มสมัครอบรม -->
                                 <div id="training-form-container">
+                                    <div id="canceled-alert" class="alert alert-danger mb-4 hidden">
+                                        <i class="fa-solid fa-circle-xmark me-2"></i> <strong>การลงทะเบียนเดิมของคุณถูกปฏิเสธ/ยกเลิก</strong> กรุณาตรวจสอบข้อมูลและทำการยืนยันการสมัครเข้ามาใหม่อีกครั้ง
+                                    </div>
                                     <form id="training-form">
                                         <div class="mb-3">
                                             <label class="form-label">ชื่อ - นามสกุล <span class="text-danger">*</span></label>
@@ -676,7 +679,7 @@
         // ==========================================
         // ⚠️ นำ URL จาก Google Apps Script มาใส่ที่นี่
         // ==========================================
-        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwCVVTOJxlWwvEuZAzcvVoCVayvLB2mQADTNIfwq4DBW-v_ekSm8RRDJS7tBFwQ2fM6/exec"; 
+        const GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycby_RQlqrv8NNXHO1hooi3J96d7ShBZYBi4HmEoxUvY_TWWHjLuLGOtVb9CJicRk3rgy/exec"; 
         
         // State
         let currentUser = null;
@@ -738,38 +741,21 @@
                     const formContainer = document.getElementById('training-form-container');
                     const statusContainer = document.getElementById('registration-status-container');
                     const lateSlipContainer = document.getElementById('late-slip-upload-container');
+                    const canceledAlert = document.getElementById('canceled-alert');
                     
                     const statusIcon = document.getElementById('status-icon');
                     const statusTitle = document.getElementById('status-title');
                     const statusDesc = document.getElementById('status-desc');
 
-                    if (currentUser.isRegistered) {
+                    if (currentUser.isRegistered && currentUser.regStatus !== 'canceled') {
                         formContainer.classList.add('hidden');
                         statusContainer.classList.remove('hidden');
+                        if (canceledAlert) canceledAlert.classList.add('hidden');
 
                         // เช็คว่าได้อัปโหลดสลิปหรือยัง
                         const missingSlip = !currentUser.slipUrl || currentUser.slipUrl === 'ไม่มีไฟล์แนบ';
 
-                        if (currentUser.regStatus === 'canceled') {
-                            // กรณีถูก Admin ปฏิเสธ/ยกเลิกการลงทะเบียน
-                            statusIcon.className = 'fa-solid fa-circle-xmark text-danger mb-3';
-                            statusTitle.className = 'fw-bold text-danger';
-                            statusTitle.innerText = 'การลงทะเบียนถูกยกเลิก';
-                            statusDesc.innerHTML = '<i class="fa-solid fa-ban me-2"></i>เจ้าหน้าที่ได้ทำการปฏิเสธหรือยกเลิกการลงทะเบียนของคุณ';
-                            if(lateSlipContainer) lateSlipContainer.classList.add('hidden');
-
-                            // ปิดเมนูอื่นๆ ไว้
-                            tabAssessment.classList.add('disabled');
-                            tabAssessment.innerHTML = '<i class="fa-solid fa-lock me-2"></i>ประเมิน (ถูกยกเลิก)';
-                            tabCertificate.classList.add('disabled');
-                            tabCertificate.innerHTML = '<i class="fa-solid fa-lock me-2"></i>เกียรติบัตร (ถูกยกเลิก)';
-                            
-                            const certBtn = document.getElementById('btn-download-cert');
-                            const certWarning = document.getElementById('cert-warning-container');
-                            if(certBtn) certBtn.classList.add('hidden');
-                            if(certWarning) certWarning.classList.add('hidden');
-
-                        } else if (missingSlip) {
+                        if (missingSlip) {
                             // แสดงหน้าให้แจ้งว่ายังไม่ชำระเงิน และมีปุ่มอัปโหลด
                             statusIcon.className = 'fa-solid fa-file-invoice-dollar text-danger mb-3';
                             statusTitle.className = 'fw-bold text-danger';
@@ -877,12 +863,18 @@
                             bootstrap.Tab.getOrCreateInstance(tabRegister).show();
                         }
                     } else {
-                        // ยังไม่สมัคร -> ล็อกเมนูและแสดงฟอร์ม
+                        // ยังไม่สมัคร หรือถูกยกเลิก -> ล็อกเมนูและแสดงฟอร์ม
                         tabAssessment.classList.add('disabled');
                         tabCertificate.classList.add('disabled');
                         formContainer.classList.remove('hidden');
                         statusContainer.classList.add('hidden');
                         if(lateSlipContainer) lateSlipContainer.classList.add('hidden');
+                        
+                        if (currentUser.regStatus === 'canceled') {
+                            if (canceledAlert) canceledAlert.classList.remove('hidden');
+                        } else {
+                            if (canceledAlert) canceledAlert.classList.add('hidden');
+                        }
                         
                         bootstrap.Tab.getOrCreateInstance(tabRegister).show();
                     }
@@ -946,7 +938,7 @@
                             if (user.role === 'admin') {
                                 resolve({ status: 'success', user: { name: user.name, email: user.email, role: 'admin' }, settings: mockDB.settings });
                             } else {
-                                const reg = mockDB.registrations.find(r => r.email === payload.email);
+                                const reg = mockDB.registrations.slice().reverse().find(r => r.email === payload.email);
                                 const assess = mockDB.assessments.find(a => a.email === payload.email);
                                 resolve({ status: 'success', user: { name: user.name, email: user.email, phone: user.phone, position: user.position, academicTitle: user.academicTitle, school: user.school, campus: user.campus, isRegistered: !!reg, regStatus: reg ? reg.status : 'none', slipUrl: reg ? reg.slipUrl : '', isAssessed: !!assess }, settings: mockDB.settings });
                             }
@@ -974,12 +966,20 @@
                     } else if(action === 'registerTraining') {
                         payload.status = 'pending'; 
                         payload.slipUrl = payload.fileData ? 'mock_url_uploaded' : 'ไม่มีไฟล์แนบ';
-                        mockDB.registrations.push(payload);
+                        
+                        // ระบบจำลอง: อัปเดตข้อมูลทับของเดิมถ้ามี (ป้องกันการซ้ำซ้อน)
+                        const existingIndex = mockDB.registrations.findIndex(r => r.email === payload.email);
+                        if (existingIndex !== -1) {
+                            mockDB.registrations[existingIndex] = payload;
+                        } else {
+                            mockDB.registrations.push(payload);
+                        }
+                        
                         resolve({ status: 'success', message: 'บันทึกข้อมูลการสมัครอบรมเรียบร้อยแล้ว' });
                     } else if (action === 'getAdminData') {
                         resolve({ status: 'success', data: mockDB.registrations });
                     } else if (action === 'approveRegistration') {
-                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        const reg = mockDB.registrations.slice().reverse().find(r => r.email === payload.email);
                         if (reg) {
                             reg.status = 'approved';
                             resolve({ status: 'success', message: 'ยืนยันการสมัครสำเร็จ' });
@@ -987,7 +987,7 @@
                             resolve({ status: 'error', message: 'ไม่พบข้อมูล' });
                         }
                     } else if (action === 'cancelRegistrationApproval') {
-                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        const reg = mockDB.registrations.slice().reverse().find(r => r.email === payload.email);
                         if (reg) {
                             reg.status = 'pending';
                             resolve({ status: 'success', message: 'ยกเลิกการยืนยันสำเร็จ' });
@@ -995,8 +995,7 @@
                             resolve({ status: 'error', message: 'ไม่พบข้อมูล' });
                         }
                     } else if (action === 'cancelRegistration') {
-                        // ปฏิเสธการลงทะเบียน
-                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        const reg = mockDB.registrations.slice().reverse().find(r => r.email === payload.email);
                         if (reg) {
                             reg.status = 'canceled';
                             resolve({ status: 'success', message: 'ปฏิเสธและยกเลิกการลงทะเบียนสำเร็จ' });
@@ -1015,12 +1014,11 @@
                         mockDB.settings.certTemplateUrl = 'mock-cert';
                         resolve({ status: 'success', message: 'จำลองการอัปโหลดสำเร็จ', url: mockDB.settings.certTemplateUrl });
                     } else if (action === 'getTemplateBase64') {
-                        // จำลองรูปภาพว่างเปล่า 800x600 กรณี Mock
                         const canvas = document.createElement('canvas'); canvas.width=800; canvas.height=600;
                         const ctx = canvas.getContext('2d'); ctx.fillStyle = '#f0f0f0'; ctx.fillRect(0,0,800,600);
                         resolve({ status: 'success', base64: canvas.toDataURL() });
                     } else if (action === 'uploadLateSlip') {
-                        const reg = mockDB.registrations.find(r => r.email === payload.email);
+                        const reg = mockDB.registrations.slice().reverse().find(r => r.email === payload.email);
                         if (reg) {
                             reg.slipUrl = 'mock_url_uploaded_late';
                             resolve({ status: 'success', message: 'อัปโหลดสลิปเพิ่มเติมสำเร็จ', url: reg.slipUrl });
@@ -1475,7 +1473,7 @@
                         if(currentUser.isRegistered === undefined) currentUser.isRegistered = false;
                         if(currentUser.regStatus === undefined) currentUser.regStatus = 'none';
                         if(currentUser.isAssessed === undefined) currentUser.isAssessed = false;
-                        if(currentUser.slipUrl === undefined) currentUser.slipUrl = ''; // รับค่า slipUrl มาด้วย
+                        if(currentUser.slipUrl === undefined) currentUser.slipUrl = ''; 
 
                         toggleView('dashboard-section');
                     }
