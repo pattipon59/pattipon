@@ -694,6 +694,16 @@
         };
 
         // UI Helpers
+        function formatPhone(phone) {
+            if (!phone) return '';
+            let p = String(phone).trim();
+            // ตรวจสอบว่าถ้าเป็นตัวเลข และไม่ขึ้นต้นด้วย 0 ให้เติม 0 เข้าไป
+            if (p.length > 0 && !p.startsWith('0')) {
+                return '0' + p;
+            }
+            return p;
+        }
+
         function showLoading() {
             document.getElementById('loading-overlay').classList.remove('hidden');
         }
@@ -732,7 +742,7 @@
                     document.getElementById('train-position').value = currentUser.position || '';
                     document.getElementById('train-school').value = currentUser.school || '';
                     document.getElementById('train-campus').value = currentUser.campus || '';
-                    document.getElementById('train-phone').value = currentUser.phone || '';
+                    document.getElementById('train-phone').value = formatPhone(currentUser.phone);
 
                     // จัดการสถานะเมนู (Tabs) และฟอร์มสมัครอบรม
                     const tabRegister = document.getElementById('tab-register');
@@ -886,7 +896,7 @@
             if(!currentUser) return;
             document.getElementById('edit-email').value = currentUser.email;
             document.getElementById('edit-name').value = currentUser.name;
-            document.getElementById('edit-phone').value = currentUser.phone || '';
+            document.getElementById('edit-phone').value = formatPhone(currentUser.phone);
             document.getElementById('edit-position').value = currentUser.position || '';
             document.getElementById('edit-academic-title').value = currentUser.academicTitle || '';
             document.getElementById('edit-password').value = ''; // ว่างไว้เสมอ
@@ -1099,11 +1109,13 @@
                         ? `<a href="${item.slipUrl}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-file-invoice"></i> ดูไฟล์</a>` 
                         : '<span class="text-muted text-danger"><i class="fa-solid fa-xmark me-1"></i>ไม่มีสลิป</span>';
                     
+                    const displayPhone = formatPhone(item.phone) || '-';
+
                     tbody.innerHTML += `
                         <tr>
                             <td class="text-start">${item.name}<br><small class="text-muted">${item.email}</small></td>
                             <td>${item.school}</td>
-                            <td>${item.phone}</td>
+                            <td>${displayPhone}</td>
                             <td>${slipLink}</td>
                             <td>${statusBadge}</td>
                             <td>${actionBtn}</td>
@@ -1466,6 +1478,7 @@
                         loadAdminData();
                     } else {
                         if(!currentUser.phone) currentUser.phone = ''; 
+                        currentUser.phone = formatPhone(currentUser.phone);
                         if(!currentUser.position) currentUser.position = ''; 
                         if(!currentUser.academicTitle) currentUser.academicTitle = ''; 
                         if(!currentUser.school) currentUser.school = ''; 
