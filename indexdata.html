@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Rehab Glove - โรงเรียนขัวเรียงศึกษา</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* กำหนดขนาดของพื้นที่แสดงผล 3 มิติ */
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0px 0px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4 text-primary fw-bold">ระบบติดตามกายภาพบำบัดอัจฉริยะ</h2>
+        <p class="text-center text-muted mb-5">โครงการนวัตกรรม โรงเรียนขัวเรียงศึกษา</p>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">ข้อมูลการฝึก (Dashboard)</h5>
+                        <hr>
+                        <p>สถานะการเชื่อมต่อ: <span class="badge bg-warning text-dark" id="status-badge">รอรับข้อมูล...</span></p>
+                        
+                        <div class="mt-4">
+                            <label class="form-label">จำลองแรงกำมือ (นิ้วชี้):</label>
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+                                     id="sensor-progress" role="progressbar" style="width: 0%;">0%</div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-outline-primary w-100 mt-4" onclick="simulateData()">
+                            ทดสอบรับค่าเซ็นเซอร์จำลอง
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">แบบจำลองมือ 3 มิติ (Real-time View)</h5>
+                        <div id="canvas-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // นำเข้า Three.js หลัก และส่วนเสริม (Loader และ Controls)
+        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+        import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+        import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+        // 1. ตั้งค่าฉาก (Scene), กล้อง (Camera) และ ตัวเรนเดอร์ (Renderer)
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf8f9fa); // สีพื้นหลัง
+
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 1, 3); // ถอยกล้องออกมานิดหน่อยเพื่อให้เห็นมือชัดๆ
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        // ปรับให้แสงและสีของโมเดลดูสมจริงขึ้น
+        renderer.outputColorSpace = THREE.SRGBColorSpace; 
+        container.appendChild(renderer.domElement);
+
+        // 2. เพิ่มระบบควบคุมด้วยเมาส์ (หมุน, ซูม, เลื่อน)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // ทำให้การหมุนดูนุ่มนวลขึ้น
+
+        // 3. เพิ่มแสงสว่าง (สำคัญมาก! ถ้าไม่มี โมเดลจะดำสนิท)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); // แสงกระจายทั่วๆ
+        scene.add(ambientLight);
+        
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2); // แสงแบบส่องทิศทางเหมือนดวงอาทิตย์
+        directionalLight.position.set(5, 5, 5);
+        scene.add(directionalLight);
+
+        // 4. โหลดโมเดลมือ 3 มิติ
+        let handModel; // สร้างตัวแปรเก็บโมเดลไว้ เพื่อให้สั่งขยับในอนาคตได้
+        const loader = new GLTFLoader();
+
+        // ** เปลี่ยนชื่อไฟล์ตรงนี้ ให้ตรงกับไฟล์ที่คุณดาวน์โหลดมา **
+        // เตรียมไฟล์ hand_model.glb ให้อยู่ในโฟลเดอร์เดียวกับ index.html
+        loader.load('hand_model.glb', 
+            function (gltf) {
+                handModel = gltf.scene;
+                
+                // จัดตำแหน่งให้โมเดลอยู่ตรงกลาง
+                handModel.position.set(0, -1, 0); 
+                
+                // นำโมเดลใส่ลงไปในฉาก
+                scene.add(handModel);
+                console.log("โหลดโมเดลสำเร็จ!");
+            }, 
+            function (xhr) {
+                // แสดง % การโหลดใน Console
+                console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+            }, 
+            function (error) {
+                console.error('เกิดข้อผิดพลาดในการโหลดโมเดล:', error);
+            }
+        );
+
+        // 5. ฟังก์ชันสั่งให้เรนเดอร์ภาพวนลูป (Animation Loop)
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); // อัปเดตการควบคุมด้วยเมาส์
+            
+            // ทำให้มือหมุนช้าๆ รอบตัวเองโชว์ (ลบออกได้ถ้าไม่อยากให้หมุนเอง)
+            if (handModel) {
+                handModel.rotation.y += 0.005;
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // 6. ทำให้ฉาก 3 มิติย่อขยายตามขนาดหน้าจอ
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    </script>
+
+    <script>
+        function simulateData() {
+            // สุ่มตัวเลข 0 - 100 เพื่อจำลองค่าเซ็นเซอร์
+            const randomValue = Math.floor(Math.random() * 101);
+            
+            // อัปเดตแถบสี (Progress Bar)
+            const progressBar = document.getElementById('sensor-progress');
+            progressBar.style.width = randomValue + '%';
+            progressBar.innerText = randomValue + '%';
+
+            // อัปเดตสถานะ
+            const statusBadge = document.getElementById('status-badge');
+            statusBadge.className = 'badge bg-success';
+            statusBadge.innerText = 'รับข้อมูลเรียบร้อย';
+        }
+    </script>
+</body>
+</html>
