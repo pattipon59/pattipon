@@ -14,30 +14,47 @@
         @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Sarabun', sans-serif; }
         .hidden { display: none !important; }
+        
+        /* Custom date input placeholder style (for older browsers) */
+        input[type="date"]::-webkit-datetime-edit-year-field,
+        input[type="date"]::-webkit-datetime-edit-month-field,
+        input[type="date"]::-webkit-datetime-edit-day-field,
+        input[type="date"]::-webkit-datetime-edit-text {
+            color: #475569;
+        }
+
+        /* ซ่อน Scrollbar ของตาราง แต่ยังเลื่อนได้ */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased min-h-screen relative">
 
     <!-- Modal กำลังโหลด -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[60] hidden">
-        <div class="bg-white p-6 rounded-xl shadow-xl flex flex-col items-center">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-            <p class="text-slate-700 font-medium" id="loadingText">กำลังโหลดข้อมูลจาก Google Sheet...</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[60] hidden p-4">
+        <div class="bg-white p-6 rounded-xl shadow-xl flex flex-col items-center max-w-sm w-full text-center">
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+            <p class="text-slate-700 font-medium text-sm md:text-base" id="loadingText">กำลังโหลดข้อมูลจาก Google Sheet...</p>
         </div>
     </div>
 
     <!-- Modal เข้าสู่ระบบ -->
     <div id="loginModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 hidden">
-        <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md relative">
-            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1 rounded-full transition-colors">
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-md relative">
+            <button onclick="closeModal('loginModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <div class="text-center mb-8">
-                <div class="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="lock" class="w-8 h-8 text-blue-500"></i>
+            <div class="text-center mb-6 md:mb-8 mt-2 md:mt-0">
+                <div class="bg-blue-50 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="lock" class="w-7 h-7 md:w-8 md:h-8 text-blue-500"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800">เข้าสู่ระบบ</h2>
-                <p class="text-slate-500 mt-2">สำหรับผู้ดูแลระบบ หรือผู้มีสิทธิ์จัดการข้อมูล</p>
+                <h2 class="text-xl md:text-2xl font-bold text-slate-800">เข้าสู่ระบบ</h2>
+                <p class="text-slate-500 mt-2 text-sm md:text-base">สำหรับผู้ดูแลระบบ หรือผู้มีสิทธิ์จัดการข้อมูล</p>
             </div>
             
             <form id="loginForm" class="space-y-4">
@@ -45,25 +62,25 @@
                     <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อผู้ใช้งาน</label>
                     <div class="relative">
                         <i data-lucide="user" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                        <input type="text" id="username" class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="admin" required />
+                        <input type="text" id="username" class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" placeholder="admin" required />
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">รหัสผ่าน</label>
                     <div class="relative">
                         <i data-lucide="lock" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                        <input type="password" id="password" class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="พิมพ์ password" required />
+                        <input type="password" id="password" class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" placeholder="พิมพ์ password" required />
                     </div>
                 </div>
                 <p id="loginError" class="text-red-500 text-sm text-center hidden"></p>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center space-x-2 mt-2">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors flex items-center justify-center space-x-2 mt-4 text-sm md:text-base">
                     <i data-lucide="log-in" class="w-5 h-5"></i>
                     <span>เข้าสู่ระบบ</span>
                 </button>
             </form>
             <div class="mt-6 bg-slate-50 p-4 rounded-lg text-sm text-slate-600 border border-slate-200">
                 <p class="font-medium mb-2 text-slate-800">บัญชีสำหรับการทดสอบ:</p>
-                <ul class="space-y-1">
+                <ul class="space-y-1 text-xs md:text-sm">
                     <li><strong>Admin:</strong> admin / password</li>
                     <li><strong>User:</strong> user / password</li>
                 </ul>
@@ -73,161 +90,196 @@
 
     <!-- Modal ฟอร์มเพิ่ม/แก้ไขโครงการ -->
     <div id="projectModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto hidden">
-        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl w-full max-w-3xl relative my-8">
-            <button onclick="closeModal('projectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1 rounded-full transition-colors">
+        <div class="bg-white p-5 md:p-8 rounded-2xl shadow-xl w-full max-w-3xl relative my-8">
+            <button onclick="closeModal('projectModal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full transition-colors">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
-            <div class="mb-6">
-                <h2 id="modalTitle" class="text-2xl font-bold text-slate-800">เพิ่มโครงการใหม่</h2>
+            <div class="mb-5 md:mb-6 mt-2 md:mt-0">
+                <h2 id="modalTitle" class="text-xl md:text-2xl font-bold text-slate-800">เพิ่มโครงการใหม่</h2>
             </div>
             
             <form id="projectForm" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">รหัสโครงการ/กิจกรรม <span class="text-red-500">*</span></label>
-                        <input type="text" id="p_id" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" id="p_id" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">กลุ่มงาน <span class="text-red-500">*</span></label>
-                        <input type="text" id="p_department" required class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <select id="p_department" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm md:text-base">
+                            <option value="" disabled selected>-- เลือกกลุ่มงาน --</option>
+                            <option value="กลุ่มบริหารงานวิชาการ">กลุ่มบริหารงานวิชาการ</option>
+                            <option value="กลุ่มบริหารงานงบประมาณ">กลุ่มบริหารงานงบประมาณ</option>
+                            <option value="กลุ่มบริหารงานบุคคล">กลุ่มบริหารงานบุคคล</option>
+                            <option value="กลุ่มบริหารงานทั่วไป">กลุ่มบริหารงานทั่วไป</option>
+                        </select>
                     </div>
-                    <div class="md:col-span-2">
+                    <div class="sm:col-span-2">
                         <label class="block text-sm font-medium text-slate-700 mb-1">ชื่อโครงการ</label>
-                        <input type="text" id="p_projectName" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" id="p_projectName" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
-                    <div class="md:col-span-2">
+                    <div class="sm:col-span-2">
                         <label class="block text-sm font-medium text-slate-700 mb-1">กิจกรรม</label>
-                        <input type="text" id="p_activity" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" id="p_activity" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">เงินอุดหนุน (บาท)</label>
-                        <input type="number" id="p_budgetSubsidy" min="0" step="any" value="0" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="number" id="p_budgetSubsidy" min="0" step="any" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">กิจกรรมพัฒนาผู้เรียน (บาท)</label>
-                        <input type="number" id="p_budgetLearner" min="0" step="any" value="0" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="number" id="p_budgetLearner" min="0" step="any" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">รายได้สถานศึกษา (บาท)</label>
-                        <input type="number" id="p_budgetIncome" min="0" step="any" value="0" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="number" id="p_budgetIncome" min="0" step="any" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">อื่นๆ (บาท)</label>
-                        <input type="number" id="p_budgetOther" min="0" step="any" value="0" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="number" id="p_budgetOther" min="0" step="any" value="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1 text-rose-600">ยอดเบิกจ่ายสะสม (บาท)</label>
-                        <input type="number" id="p_expense" min="0" step="any" value="0" class="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ช่วงเวลาดำเนินการ</label>
-                        <input type="text" id="p_period" placeholder="เช่น ต.ค. 68 - มี.ค. 69" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="number" id="p_expense" min="0" step="any" value="0" class="w-full px-3 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50 text-sm md:text-base" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">ผู้รับผิดชอบโครงการ</label>
-                        <input type="text" id="p_owner" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" id="p_owner" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
+                    </div>
+                    
+                    <!-- ปฏิทินเลือกช่วงเวลา (เพิ่ม/แก้ไข) -->
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ช่วงเวลาดำเนินการ (เริ่มต้น - สิ้นสุด)</label>
+                        <div class="flex flex-col sm:flex-row items-center gap-2">
+                            <input type="date" id="p_startDate" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" title="วันที่เริ่มต้น" />
+                            <span class="text-slate-500 hidden sm:inline">ถึง</span>
+                            <span class="text-slate-500 text-sm sm:hidden mt-1 mb-1">ถึง</span>
+                            <input type="date" id="p_endDate" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" title="วันที่สิ้นสุด" />
+                        </div>
                     </div>
                 </div>
                 
-                <div class="flex justify-end space-x-3 mt-6 pt-6 border-t border-slate-100">
-                    <button type="button" onclick="closeModal('projectModal')" class="px-4 py-2 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors font-medium">ยกเลิก</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium">บันทึกข้อมูล</button>
+                <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t border-slate-100">
+                    <button type="button" onclick="closeModal('projectModal')" class="w-full sm:w-auto px-5 py-2.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors font-medium order-2 sm:order-1 text-sm md:text-base">ยกเลิก</button>
+                    <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium order-1 sm:order-2 text-sm md:text-base">บันทึกข้อมูล</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto p-4 md:p-8 space-y-6">
+    <div class="max-w-7xl mx-auto p-3 sm:p-4 md:p-8 space-y-4 md:space-y-6">
         
         <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800">แดชบอร์ดแผนและงบประมาณ ปี 2569</h1>
-                <p class="text-slate-500 mt-1">สรุปภาพรวมโครงการ และข้อมูลจาก Google Sheets</p>
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-100 gap-4 md:gap-0">
+            <div class="w-full md:w-auto">
+                <h1 class="text-xl md:text-2xl font-bold text-slate-800 leading-tight">แดชบอร์ดแผนและงบประมาณ ปี 2569</h1>
+                <p class="text-slate-500 mt-1 text-sm md:text-base">สรุปภาพรวมโครงการ และข้อมูลจาก Google Sheets</p>
             </div>
-            <div class="mt-4 md:mt-0 flex flex-col items-end w-full md:w-auto">
-                <div class="flex items-center space-x-4 mb-3 w-full justify-end" id="authSection">
+            <div class="flex flex-col items-start md:items-end w-full md:w-auto">
+                <div class="flex items-center gap-2 mb-3 w-full justify-between md:justify-end" id="authSection">
                     <!-- Auth section rendered by JS -->
                 </div>
                 
-                <div id="adminActions" class="hidden flex-col md:flex-row gap-2 w-full justify-center md:w-auto">
-                    <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-2">
+                <div id="adminActions" class="hidden w-full md:w-auto">
+                    <button onclick="openAddModal()" class="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-2 text-sm md:text-base font-medium">
                         <i data-lucide="plus" class="w-5 h-5"></i>
                         <span>เพิ่มโครงการ</span>
                     </button>
                 </div>
                 
-                <div id="mockDataWarning" class="flex items-center text-amber-500 text-sm mt-2 font-medium">
-                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1"></i>
-                    ยังไม่ได้เชื่อมต่อ Google Sheet (แสดงข้อมูลตัวอย่าง)
+                <div id="mockDataWarning" class="flex items-center text-amber-500 text-xs md:text-sm mt-2 md:mt-3 font-medium bg-amber-50 px-3 py-1.5 rounded-lg w-full md:w-auto justify-center md:justify-start">
+                    <i data-lucide="alert-circle" class="w-4 h-4 mr-1.5 flex-shrink-0"></i>
+                    <span>ยังไม่ได้เชื่อมต่อ Sheet (ข้อมูลตัวอย่าง)</span>
                 </div>
             </div>
         </div>
 
         <!-- Filter Section -->
-        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row gap-4 items-center">
-            <div class="relative flex-1 w-full">
+        <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row gap-4 items-start lg:items-center">
+            
+            <!-- Search -->
+            <div class="relative w-full lg:flex-1">
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5"></i>
-                <input type="text" id="searchInput" placeholder="ค้นหารหัส, ชื่อโครงการ, กิจกรรม, หรือผู้รับผิดชอบ..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" id="searchInput" placeholder="ค้นหารหัส, ชื่อโครงการ, หรือผู้รับผิดชอบ..." class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" />
             </div>
-            <div class="flex items-center gap-2 w-full md:w-auto">
-                <i data-lucide="filter" class="text-slate-400 w-5 h-5"></i>
-                <select id="deptFilter" class="flex-1 md:w-64 px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    <option value="ทั้งหมด">ทุกกลุ่มงาน</option>
-                </select>
-                <button onclick="fetchData()" class="bg-slate-100 hover:bg-slate-200 p-2 rounded-lg text-slate-600 transition-colors" title="รีเฟรชข้อมูล">
-                    <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+            
+            <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <!-- Dropdown กลุ่มงาน -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <i data-lucide="filter" class="text-slate-400 w-5 h-5 hidden sm:block"></i>
+                    <select id="deptFilter" class="w-full sm:w-48 px-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm md:text-base">
+                        <option value="ทั้งหมด">ทุกกลุ่มงาน</option>
+                    </select>
+                </div>
+                
+                <!-- ตัวกรองปฏิทินแบบช่วงเวลา -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 w-full sm:w-auto">
+                    <div class="flex items-center gap-1.5 mb-2 sm:mb-0">
+                        <i data-lucide="calendar" class="text-slate-400 w-4 h-4 flex-shrink-0"></i>
+                        <span class="text-xs md:text-sm text-slate-600 font-medium whitespace-nowrap">ช่วงเวลา:</span>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-between">
+                        <input type="date" id="filterStartDate" class="focus:outline-none bg-transparent text-sm text-slate-700 w-full sm:w-[125px]" title="ตั้งแต่" />
+                        <span class="text-slate-400 text-sm">-</span>
+                        <input type="date" id="filterEndDate" class="focus:outline-none bg-transparent text-sm text-slate-700 w-full sm:w-[125px]" title="ถึง" />
+                    </div>
+                </div>
+
+                <!-- ปุ่มล้างตัวกรอง -->
+                <button onclick="clearDateFilter()" class="bg-slate-100 hover:bg-slate-200 py-2.5 px-4 sm:px-3 rounded-lg text-slate-600 transition-colors w-full sm:w-auto flex justify-center items-center font-medium sm:font-normal" title="ล้างตัวกรองวันที่">
+                    <i data-lucide="x-circle" class="w-5 h-5"></i>
+                    <span class="ml-2 text-sm sm:hidden">ล้างตัวกรองวันที่</span>
                 </button>
             </div>
         </div>
 
         <!-- KPI Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-4">
-                <div class="p-3 rounded-xl bg-blue-50 text-blue-500"><i data-lucide="wallet" class="w-6 h-6"></i></div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">รวมงบประมาณทั้งหมด</p>
-                    <h3 id="kpi-total" class="text-xl font-bold text-slate-800">0</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-3 md:space-x-4">
+                <div class="p-3 rounded-xl bg-blue-50 text-blue-500 flex-shrink-0"><i data-lucide="wallet" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                <div class="overflow-hidden w-full">
+                    <p class="text-xs md:text-sm font-medium text-slate-500 mb-1 truncate">รวมงบประมาณทั้งหมด</p>
+                    <h3 id="kpi-total" class="text-lg md:text-xl font-bold text-slate-800 truncate">0</h3>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-4">
-                <div class="p-3 rounded-xl bg-emerald-50 text-emerald-500"><i data-lucide="file-text" class="w-6 h-6"></i></div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">จำนวนโครงการ</p>
-                    <h3 id="kpi-projects" class="text-xl font-bold text-slate-800">0 โครงการ</h3>
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-3 md:space-x-4">
+                <div class="p-3 rounded-xl bg-emerald-50 text-emerald-500 flex-shrink-0"><i data-lucide="file-text" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                <div class="overflow-hidden w-full">
+                    <p class="text-xs md:text-sm font-medium text-slate-500 mb-1 truncate">จำนวนโครงการ</p>
+                    <h3 id="kpi-projects" class="text-lg md:text-xl font-bold text-slate-800 truncate">0 โครงการ</h3>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-4">
-                <div class="p-3 rounded-xl bg-amber-50 text-amber-500"><i data-lucide="activity" class="w-6 h-6"></i></div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">จำนวนกิจกรรม</p>
-                    <h3 id="kpi-activities" class="text-xl font-bold text-slate-800">0 กิจกรรม</h3>
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-3 md:space-x-4">
+                <div class="p-3 rounded-xl bg-amber-50 text-amber-500 flex-shrink-0"><i data-lucide="activity" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                <div class="overflow-hidden w-full">
+                    <p class="text-xs md:text-sm font-medium text-slate-500 mb-1 truncate">จำนวนกิจกรรม</p>
+                    <h3 id="kpi-activities" class="text-lg md:text-xl font-bold text-slate-800 truncate">0 กิจกรรม</h3>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-4">
-                <div class="p-3 rounded-xl bg-purple-50 text-purple-500"><i data-lucide="users" class="w-6 h-6"></i></div>
-                <div>
-                    <p class="text-sm font-medium text-slate-500 mb-1">กลุ่มงานที่ใช้งบสูงสุด</p>
-                    <h3 id="kpi-topdept" class="text-xl font-bold text-slate-800">-</h3>
-                    <p id="kpi-topdept-val" class="text-xs text-slate-400 mt-1">0</p>
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100 flex items-start space-x-3 md:space-x-4">
+                <div class="p-3 rounded-xl bg-purple-50 text-purple-500 flex-shrink-0"><i data-lucide="users" class="w-5 h-5 md:w-6 md:h-6"></i></div>
+                <div class="overflow-hidden w-full">
+                    <p class="text-xs md:text-sm font-medium text-slate-500 mb-1 truncate">กลุ่มงานที่ใช้งบสูงสุด</p>
+                    <h3 id="kpi-topdept" class="text-sm md:text-base font-bold text-slate-800 truncate" title="-">-</h3>
+                    <p id="kpi-topdept-val" class="text-xs text-slate-400 mt-0.5 truncate">0</p>
                 </div>
             </div>
         </div>
 
         <!-- Charts Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-lg font-bold text-slate-800 mb-4">งบประมาณจำแนกตามกลุ่มงาน</h2>
-                <div class="h-72 relative w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-base md:text-lg font-bold text-slate-800 mb-4">งบประมาณจำแนกตามกลุ่มงาน</h2>
+                <div class="h-60 md:h-72 relative w-full">
                     <canvas id="barChart"></canvas>
                 </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <h2 class="text-lg font-bold text-slate-800 mb-4">สัดส่วนแหล่งที่มาของงบประมาณ</h2>
-                <div class="h-72 relative w-full flex justify-center">
+            <div class="bg-white p-4 md:p-6 rounded-2xl shadow-sm border border-slate-100">
+                <h2 class="text-base md:text-lg font-bold text-slate-800 mb-4">สัดส่วนแหล่งที่มาของงบประมาณ</h2>
+                <div class="h-60 md:h-72 relative w-full flex justify-center">
                     <canvas id="pieChart"></canvas>
                 </div>
             </div>
@@ -235,25 +287,26 @@
 
         <!-- Data Table -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="p-6 border-b border-slate-100">
-                <h2 class="text-lg font-bold text-slate-800">รายการโครงการและกิจกรรม</h2>
+            <div class="p-4 md:p-6 border-b border-slate-100 flex justify-between items-center">
+                <h2 class="text-base md:text-lg font-bold text-slate-800">รายการโครงการและกิจกรรม</h2>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
+            <!-- ห่อตารางด้วย div เพื่อให้ Scroll แนวนอนได้บนมือถือ -->
+            <div class="overflow-x-auto w-full no-scrollbar">
+                <table class="w-full text-sm text-left min-w-[800px] lg:min-w-full">
                     <thead class="text-xs text-slate-500 uppercase bg-slate-50">
                         <tr>
-                            <th class="px-6 py-4 font-medium">รหัส</th>
-                            <th class="px-6 py-4 font-medium">ชื่อโครงการ / กิจกรรม</th>
-                            <th class="px-6 py-4 font-medium">กลุ่มงาน</th>
-                            <th class="px-6 py-4 font-medium text-right hidden lg:table-cell">เงินอุดหนุน</th>
-                            <th class="px-6 py-4 font-medium text-right hidden lg:table-cell">พัฒนาผู้เรียน</th>
-                            <th class="px-6 py-4 font-medium text-right hidden lg:table-cell">รายได้สถานฯ</th>
-                            <th class="px-6 py-4 font-medium text-right">งบรวม</th>
-                            <th class="px-6 py-4 font-medium text-right">เบิกจ่าย</th>
-                            <th class="px-6 py-4 font-medium text-right">คงเหลือ</th>
-                            <th class="px-6 py-4 font-medium">ระยะเวลา</th>
-                            <th class="px-6 py-4 font-medium">ผู้รับผิดชอบ</th>
-                            <th id="th-manage" class="px-6 py-4 font-medium text-center hidden">จัดการ</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">รหัส</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium min-w-[200px]">ชื่อโครงการ / กิจกรรม</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">กลุ่มงาน</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right hidden lg:table-cell whitespace-nowrap">เงินอุดหนุน</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right hidden lg:table-cell whitespace-nowrap">พัฒนาผู้เรียน</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right hidden lg:table-cell whitespace-nowrap">รายได้สถานฯ</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">งบรวม</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">เบิกจ่าย</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">คงเหลือ</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">ระยะเวลา</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">ผู้รับผิดชอบ</th>
+                            <th id="th-manage" class="px-4 py-3 md:px-6 md:py-4 font-medium text-center hidden whitespace-nowrap">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody" class="divide-y divide-slate-100">
@@ -261,10 +314,11 @@
                     </tbody>
                 </table>
             </div>
-            <div id="noDataMessage" class="p-8 text-center text-slate-500 hidden">
-                ไม่พบข้อมูลที่ตรงกับเงื่อนไข
+            <div id="noDataMessage" class="p-8 text-center text-slate-500 hidden text-sm md:text-base">
+                ไม่พบข้อมูลที่ตรงกับเงื่อนไขที่ค้นหา
             </div>
         </div>
+        
     </div>
 
     <!-- Script Logic -->
@@ -272,16 +326,25 @@
         // ==========================================
         // ตั้งค่า URL ของ Google Apps Script ที่นี่ !!!
         // ==========================================
-        const SCRIPT_URL = ''; // นำ Web App URL ของ Google Apps Script มาใส่ในเครื่องหมายคำพูดนี้
+        const SCRIPT_URL = ''; 
         
-        // ข้อมูลจำลอง (ใช้ตอนที่ยังไม่ได้ใส่ SCRIPT_URL)
-        const MOCK_DATA = [
-            { id: '10001', projectName: 'โครงการพัฒนาความสามารถในการอ่าน', activity: 'กิจกรรมอ่านสร้างปัญญสืบสานพระราชปณิธาน', department: 'กลุ่มบริหารวิชาการ', budgetSubsidy: 20000, budgetLearner: 5000, budgetIncome: 0, budgetOther: 0, expense: 12500, period: 'พ.ค. - ก.ย. 69', owner: 'ครูจันทร์เพ็ญ คะมานันท์' },
-            { id: '10002', projectName: 'โครงการยกระดับผลสัมฤทธิ์ทางการเรียน', activity: 'ติวเข้ม O-NET', department: 'กลุ่มบริหารวิชาการ', budgetSubsidy: 50000, budgetLearner: 15000, budgetIncome: 10000, budgetOther: 0, expense: 45000, period: 'ตลอดปีการศึกษา', owner: 'ครูสมปอง รักเรียน' },
-            { id: '30001', projectName: 'โครงการปรับปรุงภูมิทัศน์และสิ่งแวดล้อม', activity: 'ทาสีรั้วและปลูกต้นไม้', department: 'กลุ่มบริหารงบประมาณ', budgetSubsidy: 0, budgetLearner: 0, budgetIncome: 80000, budgetOther: 10000, expense: 20000, period: 'ต.ค. 68', owner: 'ครูสมหมาย รักษ์โลก' },
+        // กำหนดกลุ่มงานหลักที่ต้องแสดงเสมอ
+        const STANDARD_DEPTS = [
+            'กลุ่มบริหารงานวิชาการ',
+            'กลุ่มบริหารงานงบประมาณ',
+            'กลุ่มบริหารงานบุคคล',
+            'กลุ่มบริหารงานทั่วไป'
         ];
 
-        // ตัวแปร State
+        // ข้อมูลจำลอง อัปเดตให้เก็บข้อมูล period เป็น String คั่นด้วย "|" (เช่น 2026-05-01|2026-09-30)
+        const MOCK_DATA = [
+            { id: '10001', projectName: 'โครงการพัฒนาความสามารถในการอ่าน', activity: 'กิจกรรมอ่านสร้างปัญญสืบสานพระราชปณิธาน', department: 'กลุ่มบริหารงานวิชาการ', budgetSubsidy: 20000, budgetLearner: 5000, budgetIncome: 0, budgetOther: 0, expense: 12500, period: '2026-05-01|2026-09-30', owner: 'ครูจันทร์เพ็ญ คะมานันท์' },
+            { id: '10002', projectName: 'โครงการยกระดับผลสัมฤทธิ์ทางการเรียน', activity: 'ติวเข้ม O-NET', department: 'กลุ่มบริหารงานวิชาการ', budgetSubsidy: 50000, budgetLearner: 15000, budgetIncome: 10000, budgetOther: 0, expense: 45000, period: '2026-05-16|2027-03-31', owner: 'ครูสมปอง รักเรียน' },
+            { id: '20001', projectName: 'โครงการกีฬาภายในต้านยาเสพติด', activity: 'การแข่งขันกีฬาสี', department: 'กลุ่มบริหารงานทั่วไป', budgetSubsidy: 0, budgetLearner: 30000, budgetIncome: 20000, budgetOther: 5000, expense: 55000, period: '2025-11-01|2025-11-30', owner: 'ครูสมชาย สายสปอร์ต' },
+            { id: '30001', projectName: 'โครงการปรับปรุงภูมิทัศน์และสิ่งแวดล้อม', activity: 'ทาสีรั้วและปลูกต้นไม้', department: 'กลุ่มบริหารงานงบประมาณ', budgetSubsidy: 0, budgetLearner: 0, budgetIncome: 80000, budgetOther: 10000, expense: 20000, period: '2025-10-01|2025-10-31', owner: 'ครูสมหมาย รักษ์โลก' },
+            { id: '40001', projectName: 'โครงการพัฒนาบุคลากร', activity: 'อบรมศึกษาดูงาน', department: 'กลุ่มบริหารงานบุคคล', budgetSubsidy: 10000, budgetLearner: 0, budgetIncome: 40000, budgetOther: 0, expense: 50000, period: '2026-03-01|2026-03-31', owner: 'ครูใจดี มีธรรม' },
+        ];
+
         let appData = [];
         let filteredData = [];
         let currentUser = null;
@@ -290,17 +353,35 @@
         let myPieChart = null;
         const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4'];
 
-        // ผู้ใช้งาน
         const USERS = [
             { username: 'admin', password: 'password', role: 'admin', name: 'ผู้ดูแลระบบ' },
             { username: 'user', password: 'password', role: 'viewer', name: 'ผู้บริหาร/ครู' }
         ];
 
-        // Format Currency
         const formatCurrency = (val) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(val || 0);
         const formatNum = (val) => new Intl.NumberFormat('th-TH').format(val || 0);
 
-        // คำนวณยอดรวมต่างๆ ให้แต่ละแถว
+        function formatThaiDate(dateStr) {
+            if(!dateStr) return '';
+            const d = new Date(dateStr);
+            if(isNaN(d.getTime())) return dateStr; 
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+        }
+
+        function formatPeriodForTable(periodStr) {
+            if(!periodStr) return '-';
+            const parts = periodStr.split('|');
+            if(parts.length === 2 && parts[0] && parts[1]) {
+                return `${formatThaiDate(parts[0])} - ${formatThaiDate(parts[1])}`;
+            } else if(parts.length === 2 && parts[0]) {
+                return `ตั้งแต่ ${formatThaiDate(parts[0])}`;
+            } else if(parts.length === 2 && parts[1]) {
+                return `ถึง ${formatThaiDate(parts[1])}`;
+            }
+            return formatThaiDate(periodStr) || periodStr;
+        }
+
         function prepareData(dataList) {
             return dataList.map(item => {
                 const sub = parseFloat(item.budgetSubsidy) || 0;
@@ -317,7 +398,6 @@
             });
         }
 
-        // ดึงข้อมูลจาก Google Sheets
         async function fetchData() {
             showLoading(true, "กำลังโหลดข้อมูล...");
             if (!SCRIPT_URL) {
@@ -342,12 +422,10 @@
             showLoading(false);
         }
 
-        // บันทึกข้อมูลลง Google Sheets (เพิ่ม/แก้ไข)
         async function saveData(payload) {
             showLoading(true, "กำลังบันทึกข้อมูล...");
             
             if (!SCRIPT_URL) {
-                // อัปเดตในเครื่องแบบจำลอง
                 const idx = appData.findIndex(item => item.id === payload.id);
                 if (idx > -1) appData[idx] = payload;
                 else appData.unshift(payload);
@@ -359,18 +437,14 @@
             }
 
             try {
-                // ใช้ method POST, mode no-cors เพื่อแก้ปัญหาและส่ง Content-Type แบบ text/plain
                 await fetch(SCRIPT_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
                 
-                // รอสักครู่ให้ Google Sheet ประมวลผล แล้วโหลดใหม่
                 setTimeout(() => {
-                    fetchData().then(() => {
-                        closeModal('projectModal');
-                    });
+                    fetchData().then(() => { closeModal('projectModal'); });
                 }, 1500);
 
             } catch (error) {
@@ -380,19 +454,48 @@
             }
         }
 
-        // อัปเดตหน้าจอทั้งหมด
+        function clearDateFilter() {
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            updateDashboard();
+        }
+
         function updateDashboard() {
             const searchTxt = document.getElementById('searchInput').value.toLowerCase();
             const deptVal = document.getElementById('deptFilter').value;
+            
+            const filterStartVal = document.getElementById('filterStartDate').value;
+            const filterEndVal = document.getElementById('filterEndDate').value;
+            const filterStart = filterStartVal ? new Date(filterStartVal) : null;
+            const filterEnd = filterEndVal ? new Date(filterEndVal) : null;
 
-            // กรองข้อมูล
             filteredData = appData.filter(item => {
                 const matchSearch = (item.projectName||'').toLowerCase().includes(searchTxt) ||
                                     (item.activity||'').toLowerCase().includes(searchTxt) ||
                                     (item.owner||'').toLowerCase().includes(searchTxt) ||
                                     (item.id||'').toLowerCase().includes(searchTxt);
                 const matchDept = deptVal === 'ทั้งหมด' || item.department === deptVal;
-                return matchSearch && matchDept;
+                
+                let matchPeriod = true;
+                if (filterStart || filterEnd) {
+                    if (!item.period) {
+                        matchPeriod = false; 
+                    } else {
+                        const parts = item.period.split('|');
+                        const pStart = parts[0] ? new Date(parts[0]) : null;
+                        const pEnd = parts[1] ? new Date(parts[1]) : (pStart ? new Date(pStart) : null);
+                        
+                        if (!pStart || isNaN(pStart.getTime())) {
+                            matchPeriod = false; 
+                        } else {
+                            const checkStart = filterStart || new Date('1970-01-01');
+                            const checkEnd = filterEnd || new Date('2099-12-31');
+                            matchPeriod = (pStart <= checkEnd) && ((pEnd || pStart) >= checkStart);
+                        }
+                    }
+                }
+
+                return matchSearch && matchDept && matchPeriod;
             });
 
             updateDropdowns();
@@ -402,17 +505,24 @@
             lucide.createIcons();
         }
 
-        // สร้าง Dropdown กลุ่มงาน
         function updateDropdowns() {
-            const select = document.getElementById('deptFilter');
-            const currentVal = select.value;
-            const depts = new Set(appData.map(item => item.department).filter(d => d && d !== '-'));
+            const selectDept = document.getElementById('deptFilter');
+            const currentDeptVal = selectDept.value;
+            const dataDepts = appData.map(item => item.department).filter(d => d && d !== '-');
+            const allDepts = new Set([...STANDARD_DEPTS, ...dataDepts]);
             
-            select.innerHTML = '<option value="ทั้งหมด">ทุกกลุ่มงาน</option>';
-            Array.from(depts).sort().forEach(dept => {
-                select.innerHTML += `<option value="${dept}">${dept}</option>`;
+            selectDept.innerHTML = '<option value="ทั้งหมด">ทุกกลุ่มงาน</option>';
+            
+            STANDARD_DEPTS.forEach(dept => {
+                selectDept.innerHTML += `<option value="${dept}">${dept}</option>`;
+                allDepts.delete(dept);
             });
-            if(Array.from(depts).includes(currentVal)) select.value = currentVal;
+            
+            Array.from(allDepts).sort().forEach(dept => {
+                selectDept.innerHTML += `<option value="${dept}">${dept}</option>`;
+            });
+            
+            if(Array.from(new Set([...STANDARD_DEPTS, ...dataDepts])).includes(currentDeptVal)) selectDept.value = currentDeptVal;
         }
 
         function renderKPIs() {
@@ -420,6 +530,8 @@
             let projects = new Set();
             let activities = 0;
             const deptMap = {};
+            
+            STANDARD_DEPTS.forEach(dept => deptMap[dept] = 0);
 
             filteredData.forEach(item => {
                 total += item.totalBudget;
@@ -431,7 +543,7 @@
                 totalIncome += item.budgetIncome;
                 totalOther += item.budgetOther;
 
-                if (!deptMap[item.department]) deptMap[item.department] = 0;
+                if (deptMap[item.department] === undefined) deptMap[item.department] = 0;
                 deptMap[item.department] += item.totalBudget;
             });
 
@@ -439,18 +551,18 @@
             document.getElementById('kpi-projects').innerText = `${projects.size} โครงการ`;
             document.getElementById('kpi-activities').innerText = `${activities} กิจกรรม`;
 
-            const deptData = Object.keys(deptMap).map(k => ({name: k, value: deptMap[k]})).sort((a,b) => b.value - a.value);
-            if(deptData.length > 0) {
-                document.getElementById('kpi-topdept').innerText = deptData[0].name;
-                document.getElementById('kpi-topdept-val').innerText = formatCurrency(deptData[0].value);
+            const deptDataForChart = Object.keys(deptMap).map(k => ({name: k, value: deptMap[k]}));
+            const sortedForKpi = [...deptDataForChart].sort((a,b) => b.value - a.value);
+            if(sortedForKpi.length > 0 && sortedForKpi[0].value > 0) {
+                document.getElementById('kpi-topdept').innerText = sortedForKpi[0].name;
+                document.getElementById('kpi-topdept-val').innerText = formatCurrency(sortedForKpi[0].value);
             } else {
                 document.getElementById('kpi-topdept').innerText = '-';
                 document.getElementById('kpi-topdept-val').innerText = '0 ฿';
             }
 
-            // ข้อมูลสำหรับกราฟ
             window.chartData = {
-                deptData: deptData,
+                deptData: deptDataForChart, 
                 budgetSource: [
                     { name: 'เงินอุดหนุน', value: totalSubsidy },
                     { name: 'กิจกรรมพัฒนาผู้เรียน', value: totalLearner },
@@ -479,10 +591,9 @@
                 
                 let manageBtn = '';
                 if(isAdmin) {
-                    // เข้ารหัสข้อมูลเป็น JSON เพื่อส่งไปใน onclick
                     const rowJson = encodeURIComponent(JSON.stringify(row));
                     manageBtn = `
-                    <td class="px-6 py-4 text-center">
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-center">
                         <button onclick="openEditModal('${rowJson}')" class="text-blue-500 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition-colors" title="แก้ไขข้อมูล">
                             <i data-lucide="edit" class="w-4 h-4"></i>
                         </button>
@@ -490,23 +601,23 @@
                 }
 
                 return `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4 text-slate-600">${row.id}</td>
-                    <td class="px-6 py-4">
-                        <div class="font-medium text-slate-800">${row.projectName || '-'}</div>
-                        <div class="text-slate-500 text-xs mt-1">${row.activity || '-'}</div>
+                <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-slate-600 whitespace-nowrap">${row.id}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4">
+                        <div class="font-medium text-slate-800 line-clamp-2" title="${row.projectName || '-'}">${row.projectName || '-'}</div>
+                        <div class="text-slate-500 text-xs mt-0.5 line-clamp-1" title="${row.activity || '-'}">${row.activity || '-'}</div>
                     </td>
-                    <td class="px-6 py-4">
-                        <span class="bg-slate-100 text-slate-700 px-2 py-1 rounded-md text-xs">${row.department}</span>
+                    <td class="px-4 py-3 md:px-6 md:py-4">
+                        <span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-md text-xs whitespace-nowrap">${row.department}</span>
                     </td>
-                    <td class="px-6 py-4 text-right text-slate-500 hidden lg:table-cell">${row.budgetSubsidy > 0 ? formatNum(row.budgetSubsidy) : '-'}</td>
-                    <td class="px-6 py-4 text-right text-slate-500 hidden lg:table-cell">${row.budgetLearner > 0 ? formatNum(row.budgetLearner) : '-'}</td>
-                    <td class="px-6 py-4 text-right text-slate-500 hidden lg:table-cell">${row.budgetIncome > 0 ? formatNum(row.budgetIncome) : '-'}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-slate-800">${formatNum(row.totalBudget)}</td>
-                    <td class="px-6 py-4 text-right text-rose-500 font-medium">${row.expense > 0 ? formatNum(row.expense) : '-'}</td>
-                    <td class="px-6 py-4 text-right font-bold ${remClass}">${formatNum(row.remainingBudget)}</td>
-                    <td class="px-6 py-4 text-slate-600">${row.period || '-'}</td>
-                    <td class="px-6 py-4 text-slate-600">${row.owner || '-'}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-right text-slate-500 hidden lg:table-cell whitespace-nowrap">${row.budgetSubsidy > 0 ? formatNum(row.budgetSubsidy) : '-'}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-right text-slate-500 hidden lg:table-cell whitespace-nowrap">${row.budgetLearner > 0 ? formatNum(row.budgetLearner) : '-'}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-right text-slate-500 hidden lg:table-cell whitespace-nowrap">${row.budgetIncome > 0 ? formatNum(row.budgetIncome) : '-'}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-right font-semibold text-slate-800 whitespace-nowrap">${formatNum(row.totalBudget)}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-right text-rose-500 font-medium whitespace-nowrap">${row.expense > 0 ? formatNum(row.expense) : '-'}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-right font-bold ${remClass} whitespace-nowrap">${formatNum(row.remainingBudget)}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-slate-600 text-xs whitespace-nowrap">${formatPeriodForTable(row.period)}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-slate-600 text-sm whitespace-nowrap">${row.owner || '-'}</td>
                     ${manageBtn}
                 </tr>`;
             }).join('');
@@ -515,7 +626,6 @@
         function renderCharts() {
             const data = window.chartData;
             
-            // Bar Chart
             const ctxBar = document.getElementById('barChart').getContext('2d');
             if(myBarChart) myBarChart.destroy();
             myBarChart = new Chart(ctxBar, {
@@ -525,21 +635,45 @@
                     datasets: [{
                         label: 'งบประมาณ (บาท)',
                         data: data.deptData.map(d => d.value),
-                        backgroundColor: COLORS.map(c => c + 'E6'), // Add opacity
+                        backgroundColor: COLORS.map(c => c + 'E6'),
                         borderRadius: 4
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return formatCurrency(context.raw);
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true, grid: { borderDash: [4, 4] } },
-                        x: { grid: { display: false } }
+                        y: { 
+                            beginAtZero: true, 
+                            grid: { borderDash: [4, 4] },
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000) return (value / 1000) + 'k';
+                                    return value;
+                                }
+                            }
+                        },
+                        x: { 
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
                     }
                 }
             });
 
-            // Pie Chart
             const ctxPie = document.getElementById('pieChart').getContext('2d');
             if(myPieChart) myPieChart.destroy();
             myPieChart = new Chart(ctxPie, {
@@ -554,7 +688,16 @@
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } },
+                    plugins: { 
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.label}: ${formatCurrency(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
                     cutout: '60%'
                 }
             });
@@ -567,27 +710,27 @@
             
             if (currentUser) {
                 authSection.innerHTML = `
-                    <div class="flex items-center text-sm text-slate-600 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200">
-                        <i data-lucide="user" class="w-4 h-4 mr-2 text-slate-500"></i>
+                    <div class="flex items-center text-xs md:text-sm text-slate-600 bg-slate-100 px-3 py-2 md:py-1.5 rounded-full border border-slate-200">
+                        <i data-lucide="user" class="w-3.5 h-3.5 md:w-4 md:h-4 mr-2 text-slate-500"></i>
                         <span class="font-medium">${currentUser.name}</span>
                     </div>
                     <button onclick="logout()" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors flex items-center" title="ออกจากระบบ">
-                        <i data-lucide="log-out" class="w-5 h-5 md:mr-1"></i>
+                        <i data-lucide="log-out" class="w-4 h-4 md:w-5 md:h-5 md:mr-1"></i>
                         <span class="hidden md:inline text-sm font-medium">ออก</span>
                     </button>
                 `;
                 adminActions.classList.toggle('hidden', currentUser.role !== 'admin');
             } else {
                 authSection.innerHTML = `
-                    <button onclick="document.getElementById('loginModal').classList.remove('hidden')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 font-medium border border-slate-200">
-                        <i data-lucide="log-in" class="w-5 h-5"></i>
+                    <button onclick="document.getElementById('loginModal').classList.remove('hidden')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 md:px-4 py-2 md:py-2.5 rounded-lg transition-colors flex items-center space-x-2 font-medium border border-slate-200 w-full justify-center md:w-auto text-sm md:text-base">
+                        <i data-lucide="log-in" class="w-4 h-4 md:w-5 md:h-5"></i>
                         <span>เข้าสู่ระบบ</span>
                     </button>
                 `;
                 adminActions.classList.add('hidden');
             }
             lucide.createIcons();
-            renderTable(); // Update table for manage column
+            renderTable();
         }
 
         document.getElementById('loginForm').addEventListener('submit', (e) => {
@@ -619,6 +762,8 @@
             document.getElementById('modalTitle').innerText = 'เพิ่มโครงการใหม่';
             document.getElementById('projectForm').reset();
             document.getElementById('p_id').disabled = false;
+            document.getElementById('p_startDate').value = '';
+            document.getElementById('p_endDate').value = '';
             document.getElementById('projectModal').classList.remove('hidden');
         }
 
@@ -637,14 +782,23 @@
             document.getElementById('p_budgetIncome').value = row.budgetIncome;
             document.getElementById('p_budgetOther').value = row.budgetOther;
             document.getElementById('p_expense').value = row.expense;
-            document.getElementById('p_period').value = row.period || '';
             document.getElementById('p_owner').value = row.owner;
+            
+            // แยกวันที่ Start/End จาก period
+            const parts = (row.period || '').split('|');
+            document.getElementById('p_startDate').value = parts[0] || '';
+            document.getElementById('p_endDate').value = parts[1] || '';
             
             document.getElementById('projectModal').classList.remove('hidden');
         }
 
         document.getElementById('projectForm').addEventListener('submit', (e) => {
             e.preventDefault();
+            
+            const pStart = document.getElementById('p_startDate').value;
+            const pEnd = document.getElementById('p_endDate').value;
+            const periodStr = (pStart || pEnd) ? `${pStart}|${pEnd}` : '';
+            
             const payload = {
                 id: document.getElementById('p_id').value,
                 department: document.getElementById('p_department').value,
@@ -655,7 +809,7 @@
                 budgetIncome: parseFloat(document.getElementById('p_budgetIncome').value) || 0,
                 budgetOther: parseFloat(document.getElementById('p_budgetOther').value) || 0,
                 expense: parseFloat(document.getElementById('p_expense').value) || 0,
-                period: document.getElementById('p_period').value,
+                period: periodStr,
                 owner: document.getElementById('p_owner').value
             };
 
@@ -669,8 +823,9 @@
         // Event Listeners สำหรับค้นหาและฟิลเตอร์
         document.getElementById('searchInput').addEventListener('input', updateDashboard);
         document.getElementById('deptFilter').addEventListener('change', updateDashboard);
+        document.getElementById('filterStartDate').addEventListener('change', updateDashboard);
+        document.getElementById('filterEndDate').addEventListener('change', updateDashboard);
 
-        // Utilities
         function closeModal(id) {
             document.getElementById(id).classList.add('hidden');
         }
@@ -680,7 +835,6 @@
             else document.getElementById('loadingOverlay').classList.add('hidden');
         }
 
-        // เริ่มต้นการทำงาน
         window.onload = () => {
             lucide.createIcons();
             renderAuth();
