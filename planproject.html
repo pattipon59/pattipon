@@ -122,6 +122,10 @@
                         <input type="number" id="p_expense" min="0" step="any" value="0" class="w-full px-4 py-2 border border-rose-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 bg-rose-50" />
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ช่วงเวลาดำเนินการ</label>
+                        <input type="text" id="p_period" placeholder="เช่น ต.ค. 68 - มี.ค. 69" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    </div>
+                    <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1">ผู้รับผิดชอบโครงการ</label>
                         <input type="text" id="p_owner" class="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                     </div>
@@ -247,6 +251,7 @@
                             <th class="px-6 py-4 font-medium text-right">งบรวม</th>
                             <th class="px-6 py-4 font-medium text-right">เบิกจ่าย</th>
                             <th class="px-6 py-4 font-medium text-right">คงเหลือ</th>
+                            <th class="px-6 py-4 font-medium">ระยะเวลา</th>
                             <th class="px-6 py-4 font-medium">ผู้รับผิดชอบ</th>
                             <th id="th-manage" class="px-6 py-4 font-medium text-center hidden">จัดการ</th>
                         </tr>
@@ -271,9 +276,9 @@
         
         // ข้อมูลจำลอง (ใช้ตอนที่ยังไม่ได้ใส่ SCRIPT_URL)
         const MOCK_DATA = [
-            { id: '10001', projectName: 'โครงการพัฒนาความสามารถในการอ่าน', activity: 'กิจกรรมอ่านสร้างปัญญสืบสานพระราชปณิธาน', department: 'กลุ่มบริหารวิชาการ', budgetSubsidy: 20000, budgetLearner: 5000, budgetIncome: 0, budgetOther: 0, expense: 12500, owner: 'ครูจันทร์เพ็ญ คะมานันท์' },
-            { id: '10002', projectName: 'โครงการยกระดับผลสัมฤทธิ์ทางการเรียน', activity: 'ติวเข้ม O-NET', department: 'กลุ่มบริหารวิชาการ', budgetSubsidy: 50000, budgetLearner: 15000, budgetIncome: 10000, budgetOther: 0, expense: 45000, owner: 'ครูสมปอง รักเรียน' },
-            { id: '30001', projectName: 'โครงการปรับปรุงภูมิทัศน์และสิ่งแวดล้อม', activity: 'ทาสีรั้วและปลูกต้นไม้', department: 'กลุ่มบริหารงบประมาณ', budgetSubsidy: 0, budgetLearner: 0, budgetIncome: 80000, budgetOther: 10000, expense: 20000, owner: 'ครูสมหมาย รักษ์โลก' },
+            { id: '10001', projectName: 'โครงการพัฒนาความสามารถในการอ่าน', activity: 'กิจกรรมอ่านสร้างปัญญสืบสานพระราชปณิธาน', department: 'กลุ่มบริหารวิชาการ', budgetSubsidy: 20000, budgetLearner: 5000, budgetIncome: 0, budgetOther: 0, expense: 12500, period: 'พ.ค. - ก.ย. 69', owner: 'ครูจันทร์เพ็ญ คะมานันท์' },
+            { id: '10002', projectName: 'โครงการยกระดับผลสัมฤทธิ์ทางการเรียน', activity: 'ติวเข้ม O-NET', department: 'กลุ่มบริหารวิชาการ', budgetSubsidy: 50000, budgetLearner: 15000, budgetIncome: 10000, budgetOther: 0, expense: 45000, period: 'ตลอดปีการศึกษา', owner: 'ครูสมปอง รักเรียน' },
+            { id: '30001', projectName: 'โครงการปรับปรุงภูมิทัศน์และสิ่งแวดล้อม', activity: 'ทาสีรั้วและปลูกต้นไม้', department: 'กลุ่มบริหารงบประมาณ', budgetSubsidy: 0, budgetLearner: 0, budgetIncome: 80000, budgetOther: 10000, expense: 20000, period: 'ต.ค. 68', owner: 'ครูสมหมาย รักษ์โลก' },
         ];
 
         // ตัวแปร State
@@ -500,6 +505,7 @@
                     <td class="px-6 py-4 text-right font-semibold text-slate-800">${formatNum(row.totalBudget)}</td>
                     <td class="px-6 py-4 text-right text-rose-500 font-medium">${row.expense > 0 ? formatNum(row.expense) : '-'}</td>
                     <td class="px-6 py-4 text-right font-bold ${remClass}">${formatNum(row.remainingBudget)}</td>
+                    <td class="px-6 py-4 text-slate-600">${row.period || '-'}</td>
                     <td class="px-6 py-4 text-slate-600">${row.owner || '-'}</td>
                     ${manageBtn}
                 </tr>`;
@@ -631,6 +637,7 @@
             document.getElementById('p_budgetIncome').value = row.budgetIncome;
             document.getElementById('p_budgetOther').value = row.budgetOther;
             document.getElementById('p_expense').value = row.expense;
+            document.getElementById('p_period').value = row.period || '';
             document.getElementById('p_owner').value = row.owner;
             
             document.getElementById('projectModal').classList.remove('hidden');
@@ -648,6 +655,7 @@
                 budgetIncome: parseFloat(document.getElementById('p_budgetIncome').value) || 0,
                 budgetOther: parseFloat(document.getElementById('p_budgetOther').value) || 0,
                 expense: parseFloat(document.getElementById('p_expense').value) || 0,
+                period: document.getElementById('p_period').value,
                 owner: document.getElementById('p_owner').value
             };
 
