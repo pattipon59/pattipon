@@ -19,7 +19,10 @@
         input[type="date"]::-webkit-datetime-edit-year-field,
         input[type="date"]::-webkit-datetime-edit-month-field,
         input[type="date"]::-webkit-datetime-edit-day-field,
-        input[type="date"]::-webkit-datetime-edit-text {
+        input[type="date"]::-webkit-datetime-edit-text,
+        input[type="month"]::-webkit-datetime-edit-year-field,
+        input[type="month"]::-webkit-datetime-edit-month-field,
+        input[type="month"]::-webkit-datetime-edit-text {
             color: #475569;
         }
 
@@ -150,14 +153,27 @@
                     </div>
                     
                     <!-- ปฏิทินเลือกช่วงเวลา (เพิ่ม/แก้ไข) -->
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-medium text-slate-700 mb-1">ช่วงเวลาดำเนินการ (เริ่มต้น - สิ้นสุด)</label>
-                        <div class="flex flex-col sm:flex-row items-center gap-2">
-                            <input type="date" id="p_startDate" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" title="วันที่เริ่มต้น" />
-                            <span class="text-slate-500 hidden sm:inline">ถึง</span>
-                            <span class="text-slate-500 text-sm sm:hidden mt-1 mb-1">ถึง</span>
-                            <input type="date" id="p_endDate" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base" title="วันที่สิ้นสุด" />
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">ช่วงเวลาดำเนินการ (เดือนเริ่มต้น - สิ้นสุด)</label>
+                        <div class="flex items-center gap-2">
+                            <select id="p_startDate" class="w-full px-2 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                                <option value="">-- เลือกเดือน --</option>
+                            </select>
+                            <span class="text-slate-500">-</span>
+                            <select id="p_endDate" class="w-full px-2 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white">
+                                <option value="">-- เลือกเดือน --</option>
+                            </select>
                         </div>
+                    </div>
+
+                    <!-- สถานะการดำเนินการ -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">สถานะการดำเนินการ</label>
+                        <select id="p_status" class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm md:text-base">
+                            <option value="ยังไม่ดำเนินการ">ยังไม่ดำเนินการ</option>
+                            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                            <option value="ดำเนินการเรียบร้อย">ดำเนินการเรียบร้อย</option>
+                        </select>
                     </div>
                 </div>
                 
@@ -221,6 +237,16 @@
                         <option value="ทั้งหมด">ทุกกลุ่มงาน</option>
                     </select>
                 </div>
+
+                <!-- Dropdown สถานะ -->
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="statusFilter" class="w-full sm:w-40 px-3 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm md:text-base">
+                        <option value="ทั้งหมด">ทุกสถานะ</option>
+                        <option value="ยังไม่ดำเนินการ">ยังไม่ดำเนินการ</option>
+                        <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+                        <option value="ดำเนินการเรียบร้อย">ดำเนินการเรียบร้อย</option>
+                    </select>
+                </div>
                 
                 <!-- ตัวกรองปฏิทินแบบช่วงเวลา -->
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-blue-500 w-full sm:w-auto">
@@ -229,16 +255,20 @@
                         <span class="text-xs md:text-sm text-slate-600 font-medium whitespace-nowrap">ช่วงเวลา:</span>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto justify-between">
-                        <input type="date" id="filterStartDate" class="focus:outline-none bg-transparent text-sm text-slate-700 w-full sm:w-[125px]" title="ตั้งแต่" />
+                        <select id="filterStartDate" class="focus:outline-none bg-transparent text-sm text-slate-700 w-full sm:w-[110px]">
+                            <option value="">ตั้งแต่เดือน</option>
+                        </select>
                         <span class="text-slate-400 text-sm">-</span>
-                        <input type="date" id="filterEndDate" class="focus:outline-none bg-transparent text-sm text-slate-700 w-full sm:w-[125px]" title="ถึง" />
+                        <select id="filterEndDate" class="focus:outline-none bg-transparent text-sm text-slate-700 w-full sm:w-[110px]">
+                            <option value="">ถึงเดือน</option>
+                        </select>
                     </div>
                 </div>
 
                 <!-- ปุ่มล้างตัวกรอง -->
-                <button onclick="clearDateFilter()" class="bg-slate-100 hover:bg-slate-200 py-2.5 px-4 sm:px-3 rounded-lg text-slate-600 transition-colors w-full sm:w-auto flex justify-center items-center font-medium sm:font-normal" title="ล้างตัวกรองวันที่">
+                <button onclick="clearDateFilter()" class="bg-slate-100 hover:bg-slate-200 py-2.5 px-4 sm:px-3 rounded-lg text-slate-600 transition-colors w-full sm:w-auto flex justify-center items-center font-medium sm:font-normal" title="ล้างตัวกรองช่วงเวลา">
                     <i data-lucide="x-circle" class="w-5 h-5"></i>
-                    <span class="ml-2 text-sm sm:hidden">ล้างตัวกรองวันที่</span>
+                    <span class="ml-2 text-sm sm:hidden">ล้างตัวกรองช่วงเวลา</span>
                 </button>
             </div>
         </div>
@@ -299,7 +329,7 @@
             </div>
             <!-- ห่อตารางด้วย div เพื่อให้ Scroll แนวนอนได้บนมือถือ -->
             <div class="overflow-x-auto w-full no-scrollbar">
-                <table class="w-full text-sm text-left min-w-[800px] lg:min-w-full">
+                <table class="w-full text-sm text-left min-w-[1000px] lg:min-w-full">
                     <thead class="text-xs text-slate-500 uppercase bg-slate-50">
                         <tr>
                             <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">รหัส</th>
@@ -311,7 +341,8 @@
                             <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">งบรวม</th>
                             <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">เบิกจ่าย</th>
                             <th class="px-4 py-3 md:px-6 md:py-4 font-medium text-right whitespace-nowrap">คงเหลือ</th>
-                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">ระยะเวลา</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap text-center">ระยะเวลา</th>
+                            <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap text-center">สถานะ</th>
                             <th class="px-4 py-3 md:px-6 md:py-4 font-medium whitespace-nowrap">ผู้รับผิดชอบ</th>
                             <th id="th-manage" class="px-4 py-3 md:px-6 md:py-4 font-medium text-center hidden whitespace-nowrap">จัดการ</th>
                         </tr>
@@ -343,13 +374,13 @@
             'กลุ่มบริหารงานทั่วไป'
         ];
 
-        // ข้อมูลจำลอง อัปเดตให้เก็บข้อมูล period เป็น String คั่นด้วย "|" (เช่น 2026-05-01|2026-09-30)
+        // ข้อมูลจำลอง อัปเดตให้เก็บข้อมูล period เป็น MM และเพิ่ม status
         const MOCK_DATA = [
-            { id: '10001', projectName: 'โครงการพัฒนาความสามารถในการอ่าน', activity: 'กิจกรรมอ่านสร้างปัญญสืบสานพระราชปณิธาน', department: 'กลุ่มบริหารงานวิชาการ', budgetSubsidy: 20000, budgetLearner: 5000, budgetIncome: 0, budgetOther: 0, expense: 12500, period: '2026-05-01|2026-09-30', owner: 'ครูจันทร์เพ็ญ คะมานันท์' },
-            { id: '10002', projectName: 'โครงการยกระดับผลสัมฤทธิ์ทางการเรียน', activity: 'ติวเข้ม O-NET', department: 'กลุ่มบริหารงานวิชาการ', budgetSubsidy: 50000, budgetLearner: 15000, budgetIncome: 10000, budgetOther: 0, expense: 45000, period: '2026-05-16|2027-03-31', owner: 'ครูสมปอง รักเรียน' },
-            { id: '20001', projectName: 'โครงการกีฬาภายในต้านยาเสพติด', activity: 'การแข่งขันกีฬาสี', department: 'กลุ่มบริหารงานทั่วไป', budgetSubsidy: 0, budgetLearner: 30000, budgetIncome: 20000, budgetOther: 5000, expense: 55000, period: '2025-11-01|2025-11-30', owner: 'ครูสมชาย สายสปอร์ต' },
-            { id: '30001', projectName: 'โครงการปรับปรุงภูมิทัศน์และสิ่งแวดล้อม', activity: 'ทาสีรั้วและปลูกต้นไม้', department: 'กลุ่มบริหารงานงบประมาณ', budgetSubsidy: 0, budgetLearner: 0, budgetIncome: 80000, budgetOther: 10000, expense: 20000, period: '2025-10-01|2025-10-31', owner: 'ครูสมหมาย รักษ์โลก' },
-            { id: '40001', projectName: 'โครงการพัฒนาบุคลากร', activity: 'อบรมศึกษาดูงาน', department: 'กลุ่มบริหารงานบุคคล', budgetSubsidy: 10000, budgetLearner: 0, budgetIncome: 40000, budgetOther: 0, expense: 50000, period: '2026-03-01|2026-03-31', owner: 'ครูใจดี มีธรรม' },
+            { id: '10001', projectName: 'โครงการพัฒนาความสามารถในการอ่าน', activity: 'กิจกรรมอ่านสร้างปัญญสืบสานพระราชปณิธาน', department: 'กลุ่มบริหารงานวิชาการ', budgetSubsidy: 20000, budgetLearner: 5000, budgetIncome: 0, budgetOther: 0, expense: 12500, period: '05|09', status: 'กำลังดำเนินการ', owner: 'ครูจันทร์เพ็ญ คะมานันท์' },
+            { id: '10002', projectName: 'โครงการยกระดับผลสัมฤทธิ์ทางการเรียน', activity: 'ติวเข้ม O-NET', department: 'กลุ่มบริหารงานวิชาการ', budgetSubsidy: 50000, budgetLearner: 15000, budgetIncome: 10000, budgetOther: 0, expense: 45000, period: '05|03', status: 'ดำเนินการเรียบร้อย', owner: 'ครูสมปอง รักเรียน' },
+            { id: '20001', projectName: 'โครงการกีฬาภายในต้านยาเสพติด', activity: 'การแข่งขันกีฬาสี', department: 'กลุ่มบริหารงานทั่วไป', budgetSubsidy: 0, budgetLearner: 30000, budgetIncome: 20000, budgetOther: 5000, expense: 55000, period: '11|11', status: 'ยังไม่ดำเนินการ', owner: 'ครูสมชาย สายสปอร์ต' },
+            { id: '30001', projectName: 'โครงการปรับปรุงภูมิทัศน์และสิ่งแวดล้อม', activity: 'ทาสีรั้วและปลูกต้นไม้', department: 'กลุ่มบริหารงานงบประมาณ', budgetSubsidy: 0, budgetLearner: 0, budgetIncome: 80000, budgetOther: 10000, expense: 20000, period: '10|10', status: 'กำลังดำเนินการ', owner: 'ครูสมหมาย รักษ์โลก' },
+            { id: '40001', projectName: 'โครงการพัฒนาบุคลากร', activity: 'อบรมศึกษาดูงาน', department: 'กลุ่มบริหารงานบุคคล', budgetSubsidy: 10000, budgetLearner: 0, budgetIncome: 40000, budgetOther: 0, expense: 50000, period: '03|03', status: 'ดำเนินการเรียบร้อย', owner: 'ครูใจดี มีธรรม' },
         ];
 
         let appData = [];
@@ -368,25 +399,56 @@
         const formatCurrency = (val) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0 }).format(val || 0);
         const formatNum = (val) => new Intl.NumberFormat('th-TH').format(val || 0);
 
-        function formatThaiDate(dateStr) {
-            if(!dateStr) return '';
-            const d = new Date(dateStr);
-            if(isNaN(d.getTime())) return dateStr; 
+        // แปลงรูปแบบเลขเดือน (01-12) เป็นชื่อเดือน
+        function formatThaiMonth(monthStr) {
+            if(!monthStr) return '';
+            const m = parseInt(monthStr, 10);
             const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+            if(!isNaN(m) && m >= 1 && m <= 12) {
+                return months[m - 1];
+            }
+            return monthStr;
         }
 
         function formatPeriodForTable(periodStr) {
             if(!periodStr) return '-';
             const parts = periodStr.split('|');
             if(parts.length === 2 && parts[0] && parts[1]) {
-                return `${formatThaiDate(parts[0])} - ${formatThaiDate(parts[1])}`;
+                if(parts[0] === parts[1]) return formatThaiMonth(parts[0]);
+                return `${formatThaiMonth(parts[0])} - ${formatThaiMonth(parts[1])}`;
             } else if(parts.length === 2 && parts[0]) {
-                return `ตั้งแต่ ${formatThaiDate(parts[0])}`;
+                return `ตั้งแต่ ${formatThaiMonth(parts[0])}`;
             } else if(parts.length === 2 && parts[1]) {
-                return `ถึง ${formatThaiDate(parts[1])}`;
+                return `ถึง ${formatThaiMonth(parts[1])}`;
             }
-            return formatThaiDate(periodStr) || periodStr;
+            return formatThaiMonth(periodStr) || periodStr;
+        }
+
+        // ฟังก์ชันปรับชื่อกลุ่มงานให้เป็นมาตรฐาน ป้องกันการพิมพ์ตกคำว่า "งาน"
+        function normalizeDepartment(dept) {
+            if (!dept) return 'ไม่ระบุ';
+            const d = dept.toString().trim();
+            if (d.includes('วิชาการ')) return 'กลุ่มบริหารงานวิชาการ';
+            if (d.includes('งบประมาณ')) return 'กลุ่มบริหารงานงบประมาณ';
+            if (d.includes('บุคคล')) return 'กลุ่มบริหารงานบุคคล';
+            if (d.includes('ทั่วไป')) return 'กลุ่มบริหารงานทั่วไป';
+            return d;
+        }
+
+        // ฟังก์ชันสร้างตัวเลือกเดือน สำหรับ Dropdown
+        function populateMonthDropdowns() {
+            const fullMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+            let optionsHTML = '';
+
+            for (let m = 0; m < 12; m++) {
+                const val = String(m + 1).padStart(2, '0');
+                optionsHTML += `<option value="${val}">${fullMonths[m]}</option>`;
+            }
+
+            document.getElementById('p_startDate').innerHTML = '<option value="">-- เลือกเดือน --</option>' + optionsHTML;
+            document.getElementById('p_endDate').innerHTML = '<option value="">-- เลือกเดือน --</option>' + optionsHTML;
+            document.getElementById('filterStartDate').innerHTML = '<option value="">ตั้งแต่เดือน</option>' + optionsHTML;
+            document.getElementById('filterEndDate').innerHTML = '<option value="">ถึงเดือน</option>' + optionsHTML;
         }
 
         function prepareData(dataList) {
@@ -399,8 +461,10 @@
                 const total = sub + lrn + inc + oth;
                 return {
                     ...item,
+                    department: normalizeDepartment(item.department),
                     budgetSubsidy: sub, budgetLearner: lrn, budgetIncome: inc, budgetOther: oth,
-                    expense: exp, totalBudget: total, remainingBudget: total - exp
+                    expense: exp, totalBudget: total, remainingBudget: total - exp,
+                    status: item.status || 'ยังไม่ดำเนินการ' // กำหนดค่า default ถ้าไม่มีข้อมูล
                 };
             });
         }
@@ -431,6 +495,8 @@
 
         async function saveData(payload) {
             showLoading(true, "กำลังบันทึกข้อมูล...");
+            
+            payload.department = normalizeDepartment(payload.department);
             
             if (!SCRIPT_URL) {
                 const idx = appData.findIndex(item => item.id === payload.id);
@@ -470,11 +536,12 @@
         function updateDashboard() {
             const searchTxt = document.getElementById('searchInput').value.toLowerCase();
             const deptVal = document.getElementById('deptFilter').value;
+            const statusVal = document.getElementById('statusFilter').value;
             
             const filterStartVal = document.getElementById('filterStartDate').value;
             const filterEndVal = document.getElementById('filterEndDate').value;
-            const filterStart = filterStartVal ? new Date(filterStartVal) : null;
-            const filterEnd = filterEndVal ? new Date(filterEndVal) : null;
+            const fStart = filterStartVal ? parseInt(filterStartVal, 10) : 1;
+            const fEnd = filterEndVal ? parseInt(filterEndVal, 10) : 12;
 
             filteredData = appData.filter(item => {
                 const matchSearch = (item.projectName||'').toLowerCase().includes(searchTxt) ||
@@ -482,27 +549,40 @@
                                     (item.owner||'').toLowerCase().includes(searchTxt) ||
                                     (item.id||'').toLowerCase().includes(searchTxt);
                 const matchDept = deptVal === 'ทั้งหมด' || item.department === deptVal;
+                const matchStatus = statusVal === 'ทั้งหมด' || item.status === statusVal;
                 
                 let matchPeriod = true;
-                if (filterStart || filterEnd) {
+                if (filterStartVal || filterEndVal) {
                     if (!item.period) {
                         matchPeriod = false; 
                     } else {
                         const parts = item.period.split('|');
-                        const pStart = parts[0] ? new Date(parts[0]) : null;
-                        const pEnd = parts[1] ? new Date(parts[1]) : (pStart ? new Date(pStart) : null);
+                        const pStart = parts[0] ? parseInt(parts[0], 10) : null;
+                        const pEnd = parts[1] ? parseInt(parts[1], 10) : pStart;
                         
-                        if (!pStart || isNaN(pStart.getTime())) {
+                        if (!pStart || isNaN(pStart)) {
                             matchPeriod = false; 
                         } else {
-                            const checkStart = filterStart || new Date('1970-01-01');
-                            const checkEnd = filterEnd || new Date('2099-12-31');
-                            matchPeriod = (pStart <= checkEnd) && ((pEnd || pStart) >= checkStart);
+                            function getMonthsInRange(s, e) {
+                                let res = [];
+                                if (s <= e) {
+                                    for(let i=s; i<=e; i++) res.push(i);
+                                } else {
+                                    for(let i=s; i<=12; i++) res.push(i);
+                                    for(let i=1; i<=e; i++) res.push(i);
+                                }
+                                return res;
+                            }
+                            
+                            const projMonths = getMonthsInRange(pStart, pEnd);
+                            const filterMonths = getMonthsInRange(fStart, fEnd);
+                            
+                            matchPeriod = projMonths.some(m => filterMonths.includes(m));
                         }
                     }
                 }
 
-                return matchSearch && matchDept && matchPeriod;
+                return matchSearch && matchDept && matchStatus && matchPeriod;
             });
 
             updateDropdowns();
@@ -606,6 +686,16 @@
                         </button>
                     </td>`;
                 }
+                
+                // รูปแบบสีของสถานะ
+                let statusBadge = '';
+                if (row.status === 'ดำเนินการเรียบร้อย') {
+                    statusBadge = '<span class="bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md text-xs whitespace-nowrap font-medium border border-emerald-200">ดำเนินการเรียบร้อย</span>';
+                } else if (row.status === 'กำลังดำเนินการ') {
+                    statusBadge = '<span class="bg-amber-100 text-amber-700 px-2.5 py-1 rounded-md text-xs whitespace-nowrap font-medium border border-amber-200">กำลังดำเนินการ</span>';
+                } else {
+                    statusBadge = '<span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md text-xs whitespace-nowrap font-medium border border-slate-200">ยังไม่ดำเนินการ</span>';
+                }
 
                 return `
                 <tr class="hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0">
@@ -623,7 +713,8 @@
                     <td class="px-4 py-3 md:px-6 md:py-4 text-right font-semibold text-slate-800 whitespace-nowrap">${formatNum(row.totalBudget)}</td>
                     <td class="px-4 py-3 md:px-6 md:py-4 text-right text-rose-500 font-medium whitespace-nowrap">${row.expense > 0 ? formatNum(row.expense) : '-'}</td>
                     <td class="px-4 py-3 md:px-6 md:py-4 text-right font-bold ${remClass} whitespace-nowrap">${formatNum(row.remainingBudget)}</td>
-                    <td class="px-4 py-3 md:px-6 md:py-4 text-slate-600 text-xs whitespace-nowrap">${formatPeriodForTable(row.period)}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-slate-600 text-xs whitespace-nowrap text-center">${formatPeriodForTable(row.period)}</td>
+                    <td class="px-4 py-3 md:px-6 md:py-4 text-center">${statusBadge}</td>
                     <td class="px-4 py-3 md:px-6 md:py-4 text-slate-600 text-sm whitespace-nowrap">${row.owner || '-'}</td>
                     ${manageBtn}
                 </tr>`;
@@ -771,6 +862,7 @@
             document.getElementById('p_id').disabled = false;
             document.getElementById('p_startDate').value = '';
             document.getElementById('p_endDate').value = '';
+            document.getElementById('p_status').value = 'ยังไม่ดำเนินการ'; // รีเซ็ตสถานะเป็นเริ่มต้น
             document.getElementById('projectModal').classList.remove('hidden');
         }
 
@@ -780,7 +872,7 @@
             const row = JSON.parse(decodeURIComponent(encodedData));
             
             document.getElementById('p_id').value = row.id;
-            document.getElementById('p_id').disabled = true; // ห้ามแก้รหัส
+            document.getElementById('p_id').disabled = true; 
             document.getElementById('p_department').value = row.department;
             document.getElementById('p_projectName').value = row.projectName;
             document.getElementById('p_activity').value = row.activity;
@@ -790,8 +882,8 @@
             document.getElementById('p_budgetOther').value = row.budgetOther;
             document.getElementById('p_expense').value = row.expense;
             document.getElementById('p_owner').value = row.owner;
+            document.getElementById('p_status').value = row.status || 'ยังไม่ดำเนินการ'; // โหลดสถานะ
             
-            // แยกวันที่ Start/End จาก period
             const parts = (row.period || '').split('|');
             document.getElementById('p_startDate').value = parts[0] || '';
             document.getElementById('p_endDate').value = parts[1] || '';
@@ -817,6 +909,7 @@
                 budgetOther: parseFloat(document.getElementById('p_budgetOther').value) || 0,
                 expense: parseFloat(document.getElementById('p_expense').value) || 0,
                 period: periodStr,
+                status: document.getElementById('p_status').value, // บันทึกสถานะ
                 owner: document.getElementById('p_owner').value
             };
 
@@ -861,13 +954,14 @@
                         id: cleanData[2],
                         projectName: cleanData[3] || '-',
                         activity: cleanData[4] || '-',
-                        department: cleanData[5] || 'ไม่ระบุ',
+                        department: normalizeDepartment(cleanData[5] || 'ไม่ระบุ'),
                         budgetSubsidy,
                         budgetLearner,
                         budgetIncome,
                         budgetOther,
                         expense,
-                        period: '', // ไฟล์ CSV ไม่มีช่วงเวลา
+                        period: '', 
+                        status: 'ยังไม่ดำเนินการ', // เซ็ตค่า Default เมื่อนำเข้า CSV
                         owner: cleanData[10] || '-'
                     });
                 }
@@ -894,7 +988,7 @@
                                 document.getElementById('loadingText').innerText = `กำลังนำเข้าข้อมูล ${successCount}/${parsedData.length}...`;
                             }
                             alert('นำเข้าข้อมูลสำเร็จ!');
-                            fetchData(); // โหลดข้อมูลใหม่ทั้งหมด
+                            fetchData(); 
                         }
                     } else {
                         showLoading(false);
@@ -903,7 +997,7 @@
                     alert('ไม่พบข้อมูลที่สามารถอ่านได้จากไฟล์นี้');
                     showLoading(false);
                 }
-                event.target.value = ''; // รีเซ็ต input
+                event.target.value = ''; 
             };
             reader.readAsText(file);
         }
@@ -924,6 +1018,7 @@
         // Event Listeners สำหรับค้นหาและฟิลเตอร์
         document.getElementById('searchInput').addEventListener('input', updateDashboard);
         document.getElementById('deptFilter').addEventListener('change', updateDashboard);
+        document.getElementById('statusFilter').addEventListener('change', updateDashboard);
         document.getElementById('filterStartDate').addEventListener('change', updateDashboard);
         document.getElementById('filterEndDate').addEventListener('change', updateDashboard);
 
@@ -938,6 +1033,7 @@
 
         window.onload = () => {
             lucide.createIcons();
+            populateMonthDropdowns();
             renderAuth();
             fetchData();
         };
