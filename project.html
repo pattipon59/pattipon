@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบประมวลผลและวิเคราะห์ประสิทธิภาพการปลูกผักบุ้งจีน</title>
+    
+    <!-- Tailwind CSS สำหรับจัดหน้าตาให้สวยงามและ Responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome สำหรับไอคอน -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js สำหรับวาดกราฟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f1f5f9; /* Slate 100 */
+            color: #334155; /* Slate 700 */
+        }
+        .glass-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .gradient-text-ph {
+            background: linear-gradient(to right, #ea580c, #f59e0b); /* Orange to Amber */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .gradient-text-moisture {
+            background: linear-gradient(to right, #059669, #10b981); /* Emerald */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .ai-gradient {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #3b82f6;
+        }
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            margin: 0 2px;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+        
+        /* Custom Scrollbar for AI Response */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+
+    <div class="max-w-6xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-emerald-600 flex items-center gap-2">
+                    <i class="fa-solid fa-leaf"></i> ระบบประมวลผลและวิเคราะห์ประสิทธิภาพการปลูกผักบุ้งจีน
+                </h1>
+                <p class="text-sm text-slate-500 mt-1">ระบบติดตามคุณภาพดินอัจฉริยะ (pH & Moisture)</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-xs text-slate-400">อัปเดตล่าสุด</p>
+                    <p class="text-sm font-semibold text-slate-700" id="last-update">--/--/---- --:--</p>
+                </div>
+                <button onclick="fetchData()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-rotate-right" id="refresh-icon"></i> 
+                    <span class="hidden sm:inline">รีเฟรชข้อมูล</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- pH Card -->
+            <div class="glass-card p-6 flex flex-col items-center justify-center text-center relative overflow-hidden transition-colors duration-300 border-2" id="ph-card">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl text-orange-500"><i class="fa-solid fa-flask"></i></div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">ระดับค่า pH ในดิน</h3>
+                <div class="text-6xl sm:text-7xl font-extrabold gradient-text-ph my-2" id="current-ph">--</div>
+                <p class="text-sm text-slate-500 mb-4">ช่วงที่เหมาะสม: <span class="font-bold text-slate-700">6.1 - 6.5</span> (กรดอ่อน)</p>
+                <div id="ph-status" class="px-4 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-500">รอข้อมูล...</div>
+            </div>
+
+            <!-- Moisture Card -->
+            <div class="glass-card p-6 flex flex-col items-center justify-center text-center relative overflow-hidden transition-colors duration-300 border-2" id="moisture-card">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-6xl text-emerald-500"><i class="fa-solid fa-droplet"></i></div>
+                <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">ความชื้นสัมพัทธ์ในดิน</h3>
+                <div class="text-6xl sm:text-7xl font-extrabold gradient-text-moisture my-2" id="current-moisture">--%</div>
+                <p class="text-sm text-slate-500 mb-4">เป้าหมาย: <span class="font-bold text-slate-700">60% - 85%</span> (ผักบุ้งชอบน้ำ)</p>
+                <div id="moisture-status" class="px-4 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-500">รอข้อมูล...</div>
+            </div>
+
+        </div>
+
+        <!-- AI Assistant Section -->
+        <div class="glass-card ai-gradient p-6">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl shadow-sm">
+                    <i class="fa-solid fa-robot"></i>
+                </div>
+                <h3 class="font-bold text-blue-900 text-lg">AI วิเคราะห์เจาะลึกและแนะนำการจัดการแปลง</h3>
+            </div>
+            <div class="bg-white/90 backdrop-blur-sm p-5 rounded-xl text-slate-700 text-sm leading-relaxed min-h-[120px] max-h-[300px] overflow-y-auto custom-scrollbar shadow-inner" id="ai-response-container">
+                <div class="flex items-center text-blue-500 font-medium h-full">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> รอรับข้อมูลเซนเซอร์เพื่อเริ่มการวิเคราะห์สถานะดิน...
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="glass-card p-6">
+            <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-chart-area text-slate-400"></i> แนวโน้มคุณภาพดิน (20 รายการล่าสุด)
+            </h3>
+            <div class="relative h-72 w-full">
+                <canvas id="soilChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // ⚙️ การตั้งค่าระบบ
+        // ==========================================
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx0XMysFsoPDgS6KDLrYP9pZHJwrlFnPX-DWTCmK8hBUt_NF8WwqJ3KrNYeSM4g6ls/exec"; // ใส่ URL Web App
+        const apiKey = ""; // API Key Gemini
+
+        let soilChart;
+        let lastAlertTime = 0;
+
+        // ==========================================
+        // 🔔 ระบบแจ้งเตือน (Toast Notification)
+        // ==========================================
+        function showToast(message, type = 'warning') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'warning' ? 'bg-red-500' : 'bg-emerald-500';
+            const icon = type === 'warning' ? 'fa-triangle-exclamation animate-bounce' : 'fa-check-circle';
+            
+            toast.className = `${bgColor} text-white px-5 py-3 rounded-xl shadow-2xl flex items-center gap-4 transform transition-all duration-300 translate-x-full opacity-0 border border-white/20`;
+            toast.innerHTML = `
+                <div class="text-2xl"><i class="fa-solid ${icon}"></i></div>
+                <div>
+                    <h4 class="font-bold text-sm tracking-wide">${type === 'warning' ? 'แจ้งเตือนฉุกเฉิน!' : 'สถานะปกติ'}</h4>
+                    <p class="text-sm opacity-90">${message}</p>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            }, 10);
+            
+            // Remove after 6 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 6000);
+        }
+
+        // ==========================================
+        // 🤖 ระบบประมวลผล AI (Gemini)
+        // ==========================================
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            const delays = [1000, 2000, 4000, 8000, 16000];
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        async function generateAIRecommendation(ph, moisture) {
+            const container = document.getElementById('ai-response-container');
+            container.innerHTML = `
+                <div class="flex items-center text-blue-600 font-medium py-4">
+                    <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> ผู้ช่วย AI กำลังวิเคราะห์ข้อมูลเชิงลึก 
+                    <div class="typing-indicator ml-2"><span></span><span></span><span></span></div>
+                </div>
+            `;
+
+            // ปรับ Prompt ให้วิเคราะห์ลึกขึ้น
+            const promptText = `คุณคือผู้เชี่ยวชาญด้านการเกษตรที่เชี่ยวชาญการปลูก "ผักบุ้งจีน" ขั้นสูง
+ข้อมูลดิน ณ ปัจจุบันของแปลงปลูกคือ: 
+- ค่า pH: ${ph} (เป้าหมายอุดมคติคือ 6.1 - 6.5)
+- ความชื้น: ${moisture}% (เป้าหมายอุดมคติคือ 60% - 85%)
+
+คำสั่ง: โปรดวิเคราะห์สถานะดินนี้อย่างลึกซึ้ง โดยจัดรูปแบบคำตอบให้สวยงามและอ่านง่าย แบ่งเป็น 3 หัวข้อดังนี้ (ใช้ตัวหนาสำหรับชื่อหัวข้อ):
+1. การวิเคราะห์สภาวะปัจจุบัน: (เกิดอะไรขึ้นกับดินตอนนี้)
+2. ผลกระทบต่อผักบุ้งจีน: (สภาวะนี้ส่งผลดีหรือผลเสียต่อราก ลำต้น หรือใบอย่างไร)
+3. ข้อเสนอแนะแนวทางแก้ไข: (แนะนำสิ่งที่ชาวสวนควรทำทันที แบบ Actionable advice)
+ใช้ภาษาไทยที่เป็นมืออาชีพ แต่เข้าใจง่ายและให้กำลังใจ`;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: "You are a professional Thai agronomist. Output structured, in-depth analysis. Use markdown formatting like bolding for headings." }] }
+            };
+
+            try {
+                if(!apiKey) {
+                    // หากไม่มี API Key ให้แสดงข้อความจำลองที่วิเคราะห์ลึกขึ้น
+                    setTimeout(() => {
+                        let mockResponse = "";
+                        if(moisture < 50) {
+                            mockResponse = `**1. การวิเคราะห์สภาวะปัจจุบัน:** ดินมีความแห้งแล้งสูงมาก (ความชื้น ${moisture}%) ซึ่งต่ำกว่าเกณฑ์มาตรฐานที่ผักบุ้งต้องการ<br><br>
+                                            **2. ผลกระทบต่อผักบุ้งจีน:** สภาพดินที่แห้งจะทำให้รากฝอยไม่สามารถดูดซึมธาตุอาหารได้ ส่งผลให้เซลล์พืชขาดน้ำ ลำต้นจะแคระแกรน ใบเหลือง และอัตราการรอดชีวิตของต้นอ่อนจะต่ำลงอย่างมาก<br><br>
+                                            **3. ข้อเสนอแนะแนวทางแก้ไข:** **เร่งด่วน!** ให้ทำการเปิดระบบน้ำหรือรดน้ำแปลงทันทีจนกว่าความชื้นจะกลับมาเหนือระดับ 60% และควรพิจารณาใช้วัสดุคลุมดิน (เช่น ฟางข้าว) เพื่อช่วยรักษาความชื้นในระยะยาวครับ`;
+                        }
+                        else if(ph > 6.5) {
+                            mockResponse = `**1. การวิเคราะห์สภาวะปัจจุบัน:** ดินมีสภาพค่อนไปทางด่าง (pH ${ph}) ซึ่งสูงกว่าระดับอุดมคติเล็กน้อย ความชื้นอยู่ในเกณฑ์ปกติ<br><br>
+                                            **2. ผลกระทบต่อผักบุ้งจีน:** ในสภาพดินด่าง ผักบุ้งจะดูดซึมธาตุเหล็กและฟอสฟอรัสได้ยากขึ้น อาจทำให้เกิดอาการ "ใบด่างเหลือง" ในขณะที่เส้นใบยังเขียว ทำให้การเจริญเติบโตชะงัก<br><br>
+                                            **3. ข้อเสนอแนะแนวทางแก้ไข:** แนะนำให้เติมอินทรียวัตถุ เช่น ปุ๋ยคอกหมักสุก หรือเศษใบอ้อยลงในแปลง เพื่อช่วยปรับสภาพดินให้เป็นกรดอ่อนๆ อย่างค่อยเป็นค่อยไปครับ`;
+                        } else {
+                            mockResponse = `**1. การวิเคราะห์สภาวะปัจจุบัน:** สภาพดินอยู่ในเกณฑ์ยอดเยี่ยมมาก ทั้งค่า pH (${ph}) และความชื้น (${moisture}%) อยู่ในจุดสมดุลอุดมคติ<br><br>
+                                            **2. ผลกระทบต่อผักบุ้งจีน:** สภาพแวดล้อมนี้ช่วยให้พืชดึงไนโตรเจนไปใช้ได้เต็มที่ ส่งผลให้อัตราการงอกสูง ผักบุ้งจะมีลำต้นอวบ กรอบ และใบมีสีเขียวเข้มสมบูรณ์<br><br>
+                                            **3. ข้อเสนอแนะแนวทางแก้ไข:** ควรรักษาสภาพการให้น้ำในระดับนี้ต่อไป และหมั่นตรวจเช็คแปลงเพื่อป้องกันแมลงศัตรูพืชครับ ทำได้ดีมากครับ!`;
+                        }
+                        container.innerHTML = `<div class="text-slate-700 leading-relaxed">${mockResponse}</div>`;
+                    }, 1500);
+                    return;
+                }
+
+                const data = await fetchWithRetry(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (aiText) {
+                    // แปลง Markdown Bold (**text**) เป็น HTML <strong>
+                    let formattedText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-800">$1</strong>');
+                    formattedText = formattedText.replace(/\n/g, '<br>');
+                    container.innerHTML = `<div class="text-slate-700 leading-relaxed">${formattedText}</div>`;
+                } else {
+                    throw new Error("No text generated");
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="text-red-500"><i class="fa-solid fa-triangle-exclamation mr-1"></i> ระบบ AI ขัดข้องชั่วคราว ไม่สามารถดึงคำแนะนำได้</div>`;
+            }
+        }
+
+        // ==========================================
+        // 📊 ระบบแดชบอร์ดและกราฟ
+        // ==========================================
+        function initChart() {
+            const ctx = document.getElementById('soilChart').getContext('2d');
+            soilChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 10, padding: 20, font: { family: 'Sarabun' } } },
+                        tooltip: { backgroundColor: 'rgba(255, 255, 255, 0.95)', titleColor: '#334155', bodyColor: '#334155', borderColor: '#e2e8f0', borderWidth: 1, padding: 10 }
+                    },
+                    scales: {
+                        x: { grid: { display: false, drawBorder: false }, ticks: { color: '#94a3b8', maxTicksLimit: 10 } },
+                        y: { 
+                            type: 'linear', position: 'left', 
+                            title: { display: true, text: 'ระดับค่า pH', color: '#f59e0b', font: { weight: 'bold' } },
+                            suggestedMin: 4, suggestedMax: 8,
+                            grid: { color: '#f1f5f9', borderDash: [5, 5] }, ticks: { color: '#94a3b8' }
+                        },
+                        y1: { 
+                            type: 'linear', position: 'right', 
+                            title: { display: true, text: 'ความชื้น (%)', color: '#10b981', font: { weight: 'bold' } },
+                            suggestedMin: 0, suggestedMax: 100,
+                            grid: { drawOnChartArea: false }, ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartData(labels, phData, moistureData) {
+            soilChart.data.labels = labels;
+            soilChart.data.datasets = [
+                {
+                    label: 'ค่า pH',
+                    data: phData,
+                    borderColor: '#f59e0b', // Amber
+                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#f59e0b',
+                    pointStyle: 'circle',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    yAxisID: 'y',
+                    tension: 0.3, // Smoother curve
+                    fill: true
+                },
+                {
+                    label: 'ความชื้น (%)',
+                    data: moistureData,
+                    borderColor: '#10b981', // Emerald
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    borderDash: [5, 5], // เปลี่ยนเป็นเส้นประให้ดูแตกต่าง
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#10b981',
+                    pointStyle: 'rectRounded', // เปลี่ยนรูปแบบจุด
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    yAxisID: 'y1',
+                    tension: 0.3,
+                    fill: true
+                }
+            ];
+            soilChart.update();
+        }
+
+        function updateUIStatus(ph, moisture) {
+            // --- อัปเดต UI ของ pH ---
+            const phStatusEl = document.getElementById('ph-status');
+            const phCardEl = document.getElementById('ph-card');
+            
+            if (ph >= 6.1 && ph <= 6.5) {
+                phStatusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> ดีเยี่ยม (เหมาะสมที่สุด)';
+                phStatusEl.className = "px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-700 border border-green-200";
+                phCardEl.style.borderColor = "#fde68a"; // amber-200
+            } else {
+                phStatusEl.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i> นอกเหนือเกณฑ์';
+                phStatusEl.className = "px-4 py-1.5 rounded-full text-sm font-bold bg-orange-100 text-orange-700 border border-orange-200";
+                phCardEl.style.borderColor = "#fbbf24"; // amber-400
+            }
+
+            // --- อัปเดต UI ของความชื้น และ แจ้งเตือน ---
+            const moisStatusEl = document.getElementById('moisture-status');
+            const moisCardEl = document.getElementById('moisture-card');
+            const now = Date.now();
+            
+            if (moisture < 50) {
+                // ดินแห้ง (วิกฤต)
+                moisStatusEl.innerHTML = '<i class="fa-solid fa-bell animate-bounce mr-1"></i> ดินแห้งเกินไป! (ควรพิจารณารดน้ำ)';
+                moisStatusEl.className = "px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-700 border border-red-300 shadow-sm animate-pulse";
+                moisCardEl.style.borderColor = "#fca5a5"; // red-300
+                moisCardEl.style.backgroundColor = "#fef2f2"; // red-50
+                
+                // แจ้งเตือน Pop-up (จำกัดการแจ้งเตือนไม่ให้รัวเกินไป ทุกๆ 3 นาที)
+                if (now - lastAlertTime > 180000) {
+                    showToast(`ตรวจพบความชื้นในดินลดต่ำลงเหลือ ${moisture}% ระบบแนะนำให้ทำการรดน้ำแปลงผักบุ้งโดยด่วน`, 'warning');
+                    lastAlertTime = now;
+                }
+            } else if (moisture > 85) {
+                // ดินแฉะไป
+                moisStatusEl.innerHTML = '<i class="fa-solid fa-water mr-1"></i> ดินแฉะ (ระวังรากเน่า)';
+                moisStatusEl.className = "px-4 py-1.5 rounded-full text-sm font-bold bg-cyan-100 text-cyan-700 border border-cyan-200";
+                moisCardEl.style.borderColor = "#67e8f9"; // cyan-300
+                moisCardEl.style.backgroundColor = "white";
+            } else {
+                // ปกติ
+                moisStatusEl.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> ความชื้นเหมาะสม';
+                moisStatusEl.className = "px-4 py-1.5 rounded-full text-sm font-bold bg-emerald-100 text-emerald-700 border border-emerald-200";
+                moisCardEl.style.borderColor = "#a7f3d0"; // emerald-200
+                moisCardEl.style.backgroundColor = "white";
+            }
+        }
+
+        async function fetchData() {
+            const refreshIcon = document.getElementById('refresh-icon');
+            refreshIcon.classList.add('fa-spin');
+
+            // ใช้ Mock Data หากยังไม่ใส่ URL จริง
+            if (WEB_APP_URL === "") {
+                setTimeout(() => {
+                    const now = new Date();
+                    const mockData = Array.from({length: 20}, (_, i) => {
+                        const d = new Date(now.getTime() - (19 - i) * 60000); 
+                        // จำลองความชื้นให้ค่อยๆ ลดลงจนไปเตือน Alert
+                        let simulatedMoisture = 70 - (i * 1.5);
+                        return {
+                            timestamp: d.toISOString(),
+                            ph: (6.2 + (i * 0.02)).toFixed(2), 
+                            moisture: simulatedMoisture.toFixed(1)
+                        };
+                    });
+                    renderDashboard(mockData);
+                    refreshIcon.classList.remove('fa-spin');
+                }, 800);
+                return;
+            }
+
+            try {
+                const response = await fetch(WEB_APP_URL + "?action=read");
+                const data = await response.json();
+                renderDashboard(data.slice(-20)); // ใช้ 20 แถวล่าสุด
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อกับฐานข้อมูล", "warning");
+            } finally {
+                refreshIcon.classList.remove('fa-spin');
+            }
+        }
+
+        function renderDashboard(dataArray) {
+            if (!dataArray || dataArray.length === 0) return;
+
+            const labels = [];
+            const phData = [];
+            const moistureData = [];
+
+            dataArray.forEach(item => {
+                let timeLabel = item.timestamp;
+                if (typeof timeLabel === 'string' && timeLabel.includes('T')) {
+                    const d = new Date(timeLabel);
+                    timeLabel = d.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                }
+                labels.push(timeLabel);
+                phData.push(parseFloat(item.ph));
+                moistureData.push(parseFloat(item.moisture));
+            });
+
+            // ข้อมูลล่าสุดคือตัวสุดท้ายใน array
+            const latest = dataArray[dataArray.length - 1];
+            const currentPh = parseFloat(latest.ph).toFixed(2);
+            const currentMoisture = parseFloat(latest.moisture).toFixed(1);
+            
+            // 1. อัปเดต UI ตัวเลข
+            document.getElementById('current-ph').textContent = currentPh;
+            document.getElementById('current-moisture').textContent = currentMoisture + "%";
+            
+            let dateObj = new Date(latest.timestamp);
+            if(isNaN(dateObj)) dateObj = new Date();
+            document.getElementById('last-update').textContent = dateObj.toLocaleString('th-TH', { 
+                day: '2-digit', month: 'short', year: 'numeric', 
+                hour: '2-digit', minute:'2-digit' 
+            });
+            
+            // 2. อัปเดตสถานะ (พร้อม Alert) และกราฟ
+            updateUIStatus(parseFloat(currentPh), parseFloat(currentMoisture));
+            updateChartData(labels, phData, moistureData);
+
+            // 3. ส่งให้ AI วิเคราะห์
+            generateAIRecommendation(currentPh, currentMoisture);
+        }
+
+        // เริ่มต้นการทำงานเมื่อโหลดหน้าเสร็จ
+        window.onload = () => {
+            initChart();
+            fetchData();
+            // รีเฟรชอัตโนมัติทุก 1 นาที
+            setInterval(fetchData, 60000);
+        };
+    </script>
+</body>
+</html>
