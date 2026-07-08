@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แดชบอร์ดสรุปกิจกรรม</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Prompt', sans-serif;
+            color: #2b3674;
+            background-color: #f4f7fe;
+            min-height: 100vh;
+        }
+        
+        .modern-card {
+            background: #ffffff;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0px 18px 40px rgba(112, 144, 176, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bg-brand-light { background-color: #e9edff; color: #4318ff; }
+        .bg-success-light { background-color: #e6f8ec; color: #05cd99; }
+        .bg-warning-light { background-color: #fff8e5; color: #ffce20; }
+        
+        .table-modern th {
+            background-color: transparent !important;
+            color: #a3aed0;
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 1px solid #e9edff;
+            padding: 1.25rem 1rem;
+            white-space: nowrap;
+        }
+        
+        .table-modern td {
+            padding: 1.25rem 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #e9edff;
+            color: #2b3674;
+            font-weight: 400;
+        }
+        
+        .table-modern tbody tr:hover td {
+            background-color: #f8f9fc;
+        }
+        
+        .table-modern tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .form-control-modern, .form-select-modern {
+            border-radius: 12px;
+            border: 1px solid #e0e5f2;
+            padding: 0.75rem 1rem;
+            color: #2b3674;
+            background-color: #f4f7fe;
+            font-size: 15px;
+        }
+        
+        .form-control-modern:focus, .form-select-modern:focus {
+            border-color: #4318ff;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(67, 24, 255, 0.1);
+            outline: none;
+        }
+        
+        .search-icon-wrapper {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #a3aed0;
+            z-index: 4;
+        }
+        
+        .search-input {
+            padding-left: 45px !important;
+        }
+        
+        .progress-custom {
+            height: 8px;
+            border-radius: 10px;
+            background-color: #e9edff;
+        }
+        
+        .progress-bar-custom {
+            border-radius: 10px;
+            background-color: #4318ff;
+        }
+
+        /* Utility classes for toggling views */
+        .d-none { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="loadingView" class="d-flex flex-column justify-content-center align-items-center vh-100 bg-light text-dark font-monospace">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+        <h4 class="fw-bold" style="color: #2b3674;">กำลังโหลดข้อมูลจาก Sheet...</h4>
+    </div>
+
+    <div id="errorView" class="d-none flex-column justify-content-center align-items-center vh-100 p-4">
+        <div class="card border-0 shadow-sm text-center" style="max-width: 500px; width: 100%; border-radius: 20px;">
+            <div class="card-body p-5">
+                <div class="bg-danger bg-opacity-10 rounded-circle d-inline-flex p-4 mb-4 text-danger">
+                    <i data-lucide="alert-circle" style="width: 48px; height: 48px;"></i>
+                </div>
+                <h3 class="card-title fw-bold mb-3" style="color: #2b3674;">ไม่สามารถโหลดข้อมูลได้</h3>
+                <p id="errorMessage" class="text-muted mb-4"></p>
+                <div class="alert alert-light border text-start mb-0 rounded-4">
+                    <p class="fw-bold mb-2 text-dark">วิธีแก้ไข:</p>
+                    <ol class="mb-0 text-muted small">
+                        <li>เปิด Google Sheet ของคุณ</li>
+                        <li>คลิกปุ่ม <strong>Share (แชร์)</strong> ที่มุมขวาบน</li>
+                        <li>เปลี่ยน General access เป็น <strong>Anyone with the link</strong></li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardView" class="d-none min-vh-100 py-4">
+        <div class="container-xl">
+            
+            <!-- Header Section -->
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h2 class="fw-bold mb-1 d-flex align-items-center" style="color: #2b3674;">
+                        <div class="icon-box bg-brand-light me-3" style="width: 48px; height: 48px; border-radius: 12px;">
+                            <i data-lucide="layout-dashboard"></i>
+                        </div>
+                        แดชบอร์ดสรุปกิจกรรม
+                    </h2>
+                    <p class="text-muted mb-0 ms-5 ps-3" style="font-size: 14px;">
+                        ดึงข้อมูลจาก Google Sheets อัตโนมัติแบบเรียลไทม์
+                    </p>
+                </div>
+                
+                <div class="position-relative" style="max-width: 350px; width: 100%;">
+                    <div class="search-icon-wrapper">
+                        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="form-control form-control-modern search-input w-100" placeholder="ค้นหาข้อมูลจากทุกคอลัมน์...">
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-12 col-md-4">
+                    <div class="modern-card p-4 d-flex align-items-center">
+                        <div class="icon-box bg-brand-light me-3">
+                            <i data-lucide="database"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted mb-0 small fw-medium">จำนวนข้อมูลทั้งหมด</p>
+                            <h3 class="fw-bold mb-0"><span id="totalRecords">0</span> <span class="fs-6 text-muted fw-normal">รายการ</span></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="modern-card p-4 d-flex align-items-center">
+                        <div class="icon-box bg-success-light me-3">
+                            <i data-lucide="activity"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted mb-0 small fw-medium">จำนวนหมวดหมู่กิจกรรม</p>
+                            <h3 class="fw-bold mb-0"><span id="totalCategories">0</span> <span class="fs-6 text-muted fw-normal">หมวดหมู่</span></h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="modern-card p-4 d-flex align-items-center">
+                        <div class="icon-box bg-warning-light me-3">
+                            <i data-lucide="trending-up"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted mb-0 small fw-medium">กิจกรรมที่พบมากที่สุด</p>
+                            <h4 class="fw-bold mb-0 text-truncate" style="max-width: 180px;" id="topActivity" title="-">-</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                
+                <!-- Left Sidebar: Filters -->
+                <div class="col-12 col-lg-3">
+                    <div class="modern-card p-4 h-100">
+                        <h5 class="fw-bold mb-4 d-flex align-items-center">
+                            <i data-lucide="filter" class="me-2 text-primary" style="width: 20px; height: 20px;"></i>
+                            ตัวกรองข้อมูล
+                        </h5>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-medium d-flex align-items-center mb-2">
+                                <i data-lucide="user" class="me-2" style="width: 16px; height: 16px;"></i> ค้นหา ชื่อ-นามสกุล
+                            </label>
+                            <input type="text" id="nameInput" class="form-control form-control-modern" placeholder="พิมพ์ชื่อ หรือ นามสกุล...">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label text-muted small fw-medium d-flex align-items-center mb-2">
+                                <i data-lucide="users" class="me-2" style="width: 16px; height: 16px;"></i> เลือกระดับชั้น / ห้อง
+                            </label>
+                            <select id="classSelect" class="form-select form-select-modern">
+                                <option value="">ทั้งหมด</option>
+                                <!-- Options populated dynamically -->
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-medium mb-2">
+                                เลือกดูกิจกรรมเฉพาะ
+                            </label>
+                            <select id="activitySelect" class="form-select form-select-modern">
+                                <option value="All">แสดงภาพรวมทั้งหมด</option>
+                                <!-- Options populated dynamically -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Tables -->
+                <div class="col-12 col-lg-9 d-flex flex-column gap-4">
+                    
+                    <!-- Summary Table (Shows only when 'All' is selected) -->
+                    <div id="summaryTableContainer" class="modern-card overflow-hidden">
+                        <div class="p-4 border-bottom" style="border-color: #e9edff;">
+                            <h5 class="fw-bold mb-0 d-flex align-items-center">
+                                <i data-lucide="table" class="me-2 text-primary" style="width: 20px; height: 20px;"></i>
+                                สรุปจำนวนข้อมูลแยกตามแต่ละกิจกรรม
+                            </h5>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-modern align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-center" style="width: 80px;">อันดับ</th>
+                                        <th>ชื่อรายการ</th>
+                                        <th style="width: 25%;">สัดส่วน (เทียบกับสูงสุด)</th>
+                                        <th class="text-end pe-4" style="width: 120px;">จำนวน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="summaryTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Data Table -->
+                    <div class="modern-card overflow-hidden">
+                        <div class="p-4 border-bottom d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2" style="border-color: #e9edff;">
+                            <h5 class="fw-bold mb-0 d-flex align-items-center">
+                                <i data-lucide="table" class="me-2 text-primary" style="width: 20px; height: 20px;"></i>
+                                รายละเอียดข้อมูล 
+                                <span id="detailsTitleBadge" class="d-none ms-2 align-items-center text-primary fs-6">
+                                    <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+                                    <span id="detailsTitleText"></span>
+                                </span>
+                            </h5>
+                            <span class="badge bg-brand-light px-3 py-2 rounded-pill fw-medium fs-6 text-primary">
+                                พบ <span id="filteredCount">0</span> รายการ
+                            </span>
+                        </div>
+                        <div class="p-0">
+                            <div class="table-responsive" style="max-height: 600px;">
+                                <table class="table table-modern align-middle mb-0 text-nowrap">
+                                    <thead style="position: sticky; top: 0; background-color: #ffffff; z-index: 1; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                                        <tr id="dataTableHead">
+                                            <th class="ps-4">#</th>
+                                            <!-- Columns populated dynamically -->
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dataTableBody">
+                                        <!-- Data populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const SHEET_ID = '1JUmqnQKlsv4GpkeGtwHZJelqjIwSLdmkESDtjPs6lZI';
+        const GID = '631214569';
+        const JSON_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
+
+        // --- State ---
+        let appState = {
+            data: [],
+            columns: [],
+            filteredData: [],
+            activityStats: [],
+            activityCol: '',
+            uniqueActivities: [],
+            uniqueClasses: [],
+            
+            // Filter states
+            selectedActivity: 'All',
+            searchTerm: '',
+            nameSearch: '',
+            classSearch: ''
+        };
+
+        // --- DOM Elements ---
+        const elLoadingView = document.getElementById('loadingView');
+        const elErrorView = document.getElementById('errorView');
+        const elErrorMessage = document.getElementById('errorMessage');
+        const elDashboardView = document.getElementById('dashboardView');
+        
+        const elTotalRecords = document.getElementById('totalRecords');
+        const elTotalCategories = document.getElementById('totalCategories');
+        const elTopActivity = document.getElementById('topActivity');
+        
+        const elSearchInput = document.getElementById('searchInput');
+        const elNameInput = document.getElementById('nameInput');
+        const elClassSelect = document.getElementById('classSelect');
+        const elActivitySelect = document.getElementById('activitySelect');
+        
+        const elSummaryTableContainer = document.getElementById('summaryTableContainer');
+        const elSummaryTableBody = document.getElementById('summaryTableBody');
+        
+        const elDataTableHead = document.getElementById('dataTableHead');
+        const elDataTableBody = document.getElementById('dataTableBody');
+        const elFilteredCount = document.getElementById('filteredCount');
+        const elDetailsTitleBadge = document.getElementById('detailsTitleBadge');
+        const elDetailsTitleText = document.getElementById('detailsTitleText');
+
+        // --- Initialization & Fetching ---
+        async function init() {
+            lucide.createIcons(); // Init icons for loading/error screens
+            
+            try {
+                const response = await fetch(JSON_URL);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const text = await response.text();
+                const jsonStringMatch = text.match(/google\.visualization\.Query\.setResponse\(([\s\S\w]+)\);/);
+                
+                if (!jsonStringMatch || jsonStringMatch.length < 2) {
+                    throw new Error('ไม่สามารถอ่านข้อมูลได้ กรุณาตรวจสอบว่า Google Sheet เปิดแชร์เป็นสาธารณะแล้ว');
+                }
+
+                const jsonData = JSON.parse(jsonStringMatch[1]);
+                if (jsonData.status === 'error') throw new Error(jsonData.errors[0].message);
+
+                const table = jsonData.table;
+                if (!table || !table.cols || !table.rows) throw new Error('โครงสร้างข้อมูลไม่ถูกต้อง');
+
+                processData(table);
+                
+                // Show dashboard, hide loading
+                elLoadingView.classList.add('d-none');
+                elDashboardView.classList.remove('d-none');
+                elDashboardView.classList.add('d-block');
+                
+                // Initial render
+                lucide.createIcons();
+                updateUI();
+
+            } catch (err) {
+                console.error("Fetch error:", err);
+                elLoadingView.classList.add('d-none');
+                elErrorView.classList.remove('d-none');
+                elErrorView.classList.add('d-flex');
+                elErrorMessage.textContent = 'เกิดข้อผิดพลาดในการดึงข้อมูล: ' + err.message;
+            }
+        }
+
+        function processData(table) {
+            const originalCols = table.cols.map(c => c.label || '');
+            if (originalCols.length === 0) throw new Error('ไม่พบคอลัมน์ข้อมูล');
+
+            const columnsToExclude = [
+                'ประทับเวลา', 
+                'หมายเหตุ (กรณีมีข้อสงสัยเพื่มเติม)', 
+                'คอลัมน์ 1'
+            ];
+            const displayCols = originalCols.filter(col => col !== '' && !columnsToExclude.includes(col));
+            
+            appState.columns = displayCols;
+
+            appState.data = table.rows.map(row => {
+                let rowObject = {};
+                originalCols.forEach((colName, index) => {
+                    if (displayCols.includes(colName)) {
+                        rowObject[colName] = row.c[index] && row.c[index].v !== null ? row.c[index].v : '';
+                    }
+                });
+                return rowObject;
+            });
+
+            if (appState.data.length === 0) {
+                throw new Error('ไม่พบข้อมูลใน Sheet นี้');
+            }
+
+            // Auto-detect 'Activity' column
+            const keywords = ['กิจกรรม', 'activity', 'ประเภท', 'type', 'โครงการ', 'หัวข้อ'];
+            let foundCol = displayCols[0]; 
+            for (const kw of keywords) {
+                const matched = displayCols.find(c => c && c.toLowerCase().includes(kw));
+                if (matched) {
+                    foundCol = matched;
+                    break;
+                }
+            }
+            appState.activityCol = foundCol;
+
+            // Compute Unique Activities
+            const activities = new Set(appState.data.map(item => item[appState.activityCol]).filter(Boolean));
+            appState.uniqueActivities = Array.from(activities).sort();
+
+            // Compute Unique Classes
+            const classKeys = displayCols.filter(k => k.includes('ชั้น') || k.includes('ระดับ') || k.includes('ห้อง'));
+            if (classKeys.length > 0) {
+                const primaryClassKey = classKeys[0];
+                const classes = new Set(appState.data.map(item => String(item[primaryClassKey]).trim()).filter(val => val && val !== 'undefined'));
+                appState.uniqueClasses = Array.from(classes).sort((a, b) => a.localeCompare(b, 'th', { numeric: true }));
+            }
+
+            // Populate Dropdowns once
+            populateDropdowns();
+            
+            // Initial filter application
+            applyFilters();
+        }
+
+        function populateDropdowns() {
+            // Populate Class Select
+            appState.uniqueClasses.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c;
+                option.textContent = c;
+                elClassSelect.appendChild(option);
+            });
+
+            // Populate Activity Select
+            appState.uniqueActivities.forEach(act => {
+                const option = document.createElement('option');
+                option.value = act;
+                option.textContent = act;
+                elActivitySelect.appendChild(option);
+            });
+            
+            // Generate Data Table Headers
+            appState.columns.forEach(col => {
+                const th = document.createElement('th');
+                th.textContent = col;
+                elDataTableHead.appendChild(th);
+            });
+        }
+
+        // --- Filtering Logic ---
+        function applyFilters() {
+            appState.filteredData = appState.data.filter(item => {
+                const matchActivity = appState.selectedActivity === 'All' || item[appState.activityCol] === appState.selectedActivity;
+                
+                const matchSearch = Object.values(item).some(val => 
+                    val && String(val).toLowerCase().includes(appState.searchTerm.toLowerCase())
+                );
+                
+                let matchName = true;
+                if (appState.nameSearch) {
+                    const nameKeys = Object.keys(item).filter(k => k.includes('ชื่อ') || k.includes('สกุล'));
+                    if (nameKeys.length > 0) {
+                        matchName = nameKeys.some(k => item[k] && String(item[k]).toLowerCase().includes(appState.nameSearch.toLowerCase()));
+                    } else {
+                        matchName = Object.values(item).some(val => val && String(val).toLowerCase().includes(appState.nameSearch.toLowerCase()));
+                    }
+                }
+
+                let matchClass = true;
+                if (appState.classSearch) {
+                    const classKeys = Object.keys(item).filter(k => k.includes('ชั้น') || k.includes('ระดับ') || k.includes('ห้อง'));
+                    if (classKeys.length > 0) {
+                        const primaryClassKey = classKeys[0];
+                        matchClass = String(item[primaryClassKey]).trim() === appState.classSearch;
+                    } else {
+                        matchClass = Object.values(item).some(val => val && String(val).trim() === appState.classSearch);
+                    }
+                }
+
+                return matchActivity && matchSearch && matchName && matchClass;
+            });
+
+            // Calculate Activity Stats for Summary Table
+            const counts = {};
+            appState.data.forEach(item => {
+                const act = item[appState.activityCol] || 'ไม่ระบุ';
+                counts[act] = (counts[act] || 0) + 1;
+            });
+            
+            appState.activityStats = Object.keys(counts).map(key => ({
+                name: key,
+                value: counts[key]
+            })).sort((a, b) => b.value - a.value);
+
+            updateUI();
+        }
+
+        // --- UI Rendering ---
+        function updateUI() {
+            // 1. Update Top Stats Cards
+            elTotalRecords.textContent = appState.data.length;
+            elTotalCategories.textContent = appState.uniqueActivities.length;
+            
+            const maxActivityValue = appState.activityStats.length > 0 ? appState.activityStats[0].value : 0;
+            const topActivityName = appState.activityStats.length > 0 ? appState.activityStats[0].name : '-';
+            
+            elTopActivity.textContent = topActivityName;
+            elTopActivity.title = topActivityName;
+
+            // 2. Handle Summary Table Visibility
+            if (appState.selectedActivity === 'All') {
+                elSummaryTableContainer.classList.remove('d-none');
+                renderSummaryTable(maxActivityValue);
+            } else {
+                elSummaryTableContainer.classList.add('d-none');
+            }
+
+            // 3. Update Detailed Table Header
+            if (appState.selectedActivity !== 'All') {
+                elDetailsTitleBadge.classList.remove('d-none');
+                elDetailsTitleBadge.classList.add('d-inline-flex');
+                elDetailsTitleText.textContent = appState.selectedActivity;
+            } else {
+                elDetailsTitleBadge.classList.add('d-none');
+                elDetailsTitleBadge.classList.remove('d-inline-flex');
+            }
+            
+            elFilteredCount.textContent = appState.filteredData.length;
+
+            // 4. Render Data Table
+            renderDataTable();
+        }
+
+        function renderSummaryTable(maxValue) {
+            elSummaryTableBody.innerHTML = '';
+            
+            appState.activityStats.forEach((stat, idx) => {
+                const percent = maxValue > 0 ? (stat.value / maxValue) * 100 : 0;
+                const tr = document.createElement('tr');
+                
+                // Rank column
+                let rankHtml = '';
+                if (idx < 3) {
+                    const badgeClass = idx === 0 ? 'warning' : idx === 1 ? 'secondary' : 'danger';
+                    rankHtml = `<span class="badge rounded-pill bg-${badgeClass} bg-opacity-25 text-dark px-3 py-2">#${idx + 1}</span>`;
+                } else {
+                    rankHtml = `#${idx + 1}`;
+                }
+
+                // Progress Bar Color
+                const barColor = idx === 0 ? '#4318ff' : '#a3aed0';
+
+                tr.innerHTML = `
+                    <td class="text-center text-muted fw-medium">${rankHtml}</td>
+                    <td class="fw-medium">${stat.name}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress progress-custom flex-grow-1">
+                                <div class="progress-bar progress-bar-custom" style="width: ${percent}%; background-color: ${barColor}"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-end fw-bold fs-6 pe-4" style="color: #4318ff;">${stat.value}</td>
+                `;
+                elSummaryTableBody.appendChild(tr);
+            });
+        }
+
+        function renderDataTable() {
+            elDataTableBody.innerHTML = '';
+
+            if (appState.filteredData.length === 0) {
+                elDataTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="${appState.columns.length + 1}" class="p-5 text-center text-muted">
+                            <i data-lucide="database" style="width: 48px; height: 48px; opacity: 0.3; margin-bottom: 1rem;"></i>
+                            <br/>
+                            ไม่พบข้อมูลที่ตรงกับเงื่อนไขการค้นหา
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons(); // re-init icons for the empty state
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+
+            appState.filteredData.forEach((row, rowIdx) => {
+                const tr = document.createElement('tr');
+                
+                // Index cell
+                const tdIndex = document.createElement('td');
+                tdIndex.className = 'ps-4 text-muted';
+                tdIndex.textContent = rowIdx + 1;
+                tr.appendChild(tdIndex);
+
+                // Data cells
+                appState.columns.forEach(col => {
+                    const td = document.createElement('td');
+                    const val = row[col];
+                    if (val !== undefined && val !== null && val !== '') {
+                        td.textContent = String(val);
+                    } else {
+                        td.innerHTML = '<span class="text-muted">-</span>';
+                    }
+                    tr.appendChild(td);
+                });
+
+                fragment.appendChild(tr);
+            });
+
+            elDataTableBody.appendChild(fragment);
+        }
+
+        // --- Event Listeners ---
+        elSearchInput.addEventListener('input', (e) => {
+            appState.searchTerm = e.target.value;
+            applyFilters();
+        });
+
+        elNameInput.addEventListener('input', (e) => {
+            appState.nameSearch = e.target.value;
+            applyFilters();
+        });
+
+        elClassSelect.addEventListener('change', (e) => {
+            appState.classSearch = e.target.value;
+            applyFilters();
+        });
+
+        elActivitySelect.addEventListener('change', (e) => {
+            appState.selectedActivity = e.target.value;
+            applyFilters();
+        });
+
+        // --- Start Application ---
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>
